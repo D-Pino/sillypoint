@@ -1,0 +1,14 @@
+services:
+  batpad:
+    build:
+      context: ../docker/batpad
+    image: sillypoint-batpad
+    container_name: batpad-${ENVIRONMENT:-dev}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../batpad:/app
+    # tty: true
+    # stdin_open: true
+    command:
+      - /start.sh
