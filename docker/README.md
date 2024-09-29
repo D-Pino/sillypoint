@@ -1,0 +1,1 @@
+This readme will be good to explain a little bit about how setup works for the different services that i'll need to have running
