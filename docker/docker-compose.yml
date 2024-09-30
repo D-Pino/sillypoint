@@ -1,14 +1,31 @@
 services:
   batpad:
     build:
-      context: ../docker/batpad
+      context: ${REPO_ROOT:-..}/docker/batpad
     image: sillypoint-batpad
     container_name: batpad-${ENVIRONMENT:-dev}
+    env_file:
+      - ${REPO_ROOT:-..}/.env
     ports:
       - "8000:8000"
+    depends_on:
+      - db
     volumes:
-      - ../batpad:/app
+      -  ${REPO_ROOT:-..}/batpad:/app
     # tty: true
     # stdin_open: true
     command:
       - /start.sh
+
+  db:
+    image: postgres:15
+    container_name: postgres-${ENVIRONMENT:-dev}
+    env_file:
+      - ${REPO_ROOT:-..}/.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
