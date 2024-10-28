@@ -8,6 +8,8 @@ import numpy.typing as nptyping
 import streamlit as st
 import pydeck
 import pandas as pd
+import streamlit.components.v1 as components
+
 
 # Same as default but with different file location for checkpoints
 checkpoints_dir = Path(__file__).parent / "checkpoints"
@@ -101,12 +103,10 @@ def main() -> None:
     view_state = pydeck.ViewState(target=target, controller=True, rotation_x=15, rotation_orbit=30, zoom=5.3)
     view = pydeck.View(type="OrbitView", controller=True)
 
-    r = pydeck.Deck(point_cloud_layer, initial_view_state=view_state, views=[view])
-    st.pydeck_chart(r)
-    r.to_html("point_cloud_layer.html", css_background_color="#add8e6")
-    st.text(str(depth))
-
-   
+    deck = pydeck.Deck(point_cloud_layer, initial_view_state=view_state, views=[view])
+    deck_html_str = deck.to_html(as_string=True, css_background_color="#add8e6")
+    components.html(deck_html_str, height=600)
+  
 
 if __name__ == "__main__":
     main()
