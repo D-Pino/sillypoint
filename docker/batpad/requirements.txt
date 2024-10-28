@@ -1,4 +1,2 @@
 django==5.1
 psycopg2-binary==2.9.3
-opencv-python==4.10.0
-click==8.1.7
