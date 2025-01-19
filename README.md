@@ -1,4 +1,4 @@
-# SillyPoint
+# sillypoint
 
 A personal playground repo for learning and experimenting with different technologies
 
