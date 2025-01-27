@@ -1,7 +1,11 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
+use fineleg::polas::load_las;
+use polars::prelude::*;
 use rerun::{demo_util::grid, external::glam};
 
 fn main() -> Result<()> {
+    let pointcloud = load_las()?;
+    println!("{pointcloud}");
     let rec = rerun::RecordingStreamBuilder::new("rerun_example_minimal").spawn()?;
 
     let points = grid(glam::Vec3::splat(-10.0), glam::Vec3::splat(10.0), 10);
