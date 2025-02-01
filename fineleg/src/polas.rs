@@ -2,23 +2,18 @@ use anyhow::Result;
 use las::Reader;
 use polars::{df, prelude::DataFrame};
 
-pub fn load_las() -> Result<DataFrame> {
-    let mut reader = Reader::from_path("../common/data/2554_1137.las")?;
+pub fn load_las_file(path: &str) -> Result<DataFrame> {
+    let mut reader = Reader::from_path(path)?;
 
-    // TODO: Surely this is horribly inefficient right. Find out how to do this
-    let mut x_values = Vec::new();
-    let mut y_values = Vec::new();
-    let mut z_values = Vec::new();
+    let (x, y, z) = reader.points().filter_map(Result::ok).fold(
+        (vec![], vec![], vec![]),
+        |(mut x, mut y, mut z), point| {
+            x.push(point.x);
+            y.push(point.y);
+            z.push(point.z);
+            (x, y, z)
+        },
+    );
 
-    for point in reader.points().map(|p| p.unwrap()) {
-        x_values.push(point.x);
-        y_values.push(point.y);
-        z_values.push(point.z);
-    }
-
-    Ok(df!(
-        "x" => x_values,
-        "y" => y_values,
-        "z" => z_values
-    )?)
+    Ok((df!["x" => x, "y" => y, "z" => z])?)
 }
