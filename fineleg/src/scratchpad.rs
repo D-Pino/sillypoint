@@ -7,28 +7,28 @@ use tokio::task::JoinSet;
 
 const DATA_URL_BASE: &str = "https://rickandmortyapi.com/api/character/";
 
-fn get_character_data_sync() -> Result<DataFrame> {
-    let mut all_chars = Vec::new();
-    let mut next_url = Some(String::from(DATA_URL_BASE));
-    while let Some(url) = next_url {
-        // println!("Getting {url}...");
-        let resp_json: Value = reqwest::blocking::get(&url)?.json()?;
-        let resp_chars = resp_json["results"]
-            .as_array()
-            .unwrap_or(&Vec::new())
-            .to_vec();
-        // println!("Found {} characters", resp_chars.len());
-        all_chars.extend(resp_chars);
-        // println!("Fetched {} characters in total so far...");
-        next_url = resp_json["info"]["next"].as_str().map(String::from);
-    }
-    let characters_json_str =
-        serde_json::to_string(&all_chars).expect("Failed to serialize characters to jsonstr");
-    let df = JsonReader::new(std::io::Cursor::new(characters_json_str))
-        .finish()
-        .expect("Failed to create DataFrame with characters jsonstr");
-    return Ok(df);
-}
+// fn get_character_data_sync() -> Result<DataFrame> {
+//     let mut all_chars = Vec::new();
+//     let mut next_url = Some(String::from(DATA_URL_BASE));
+//     while let Some(url) = next_url {
+//         // println!("Getting {url}...");
+//         let resp_json: Value = reqwest::blocking::get(&url)?.json()?;
+//         let resp_chars = resp_json["results"]
+//             .as_array()
+//             .unwrap_or(&Vec::new())
+//             .to_vec();
+//         // println!("Found {} characters", resp_chars.len());
+//         all_chars.extend(resp_chars);
+//         // println!("Fetched {} characters in total so far...");
+//         next_url = resp_json["info"]["next"].as_str().map(String::from);
+//     }
+//     let characters_json_str =
+//         serde_json::to_string(&all_chars).expect("Failed to serialize characters to jsonstr");
+//     let df = JsonReader::new(std::io::Cursor::new(characters_json_str))
+//         .finish()
+//         .expect("Failed to create DataFrame with characters jsonstr");
+//     return Ok(df);
+// }
 
 pub async fn get_character_data_async(concurrency: usize) -> Result<DataFrame> {
     let client = Arc::new(Client::new());

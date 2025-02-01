@@ -1,23 +1,8 @@
-use anyhow::{anyhow, Result};
-use fineleg::polas::load_las;
-use polars::prelude::*;
-use rerun::{demo_util::grid, external::glam};
+use anyhow::Result;
+use fineleg::polas::load_las_file;
 
 fn main() -> Result<()> {
-    let pointcloud = load_las()?;
+    let pointcloud = load_las_file("../common/data/pointclouds/2554_1137.las")?;
     println!("{pointcloud}");
-    let rec = rerun::RecordingStreamBuilder::new("rerun_example_minimal").spawn()?;
-
-    let points = grid(glam::Vec3::splat(-10.0), glam::Vec3::splat(10.0), 10);
-    let colors = grid(glam::Vec3::ZERO, glam::Vec3::splat(255.0), 10)
-        .map(|v| rerun::Color::from_rgb(v.x as u8, v.y as u8, v.z as u8));
-
-    rec.log(
-        "my_points",
-        &rerun::Points3D::new(points)
-            .with_colors(colors)
-            .with_radii([0.5]),
-    )?;
-
     Ok(())
 }
