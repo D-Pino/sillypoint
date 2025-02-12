@@ -1,4 +1,0 @@
-opencv-python==4.10.0.84
-click==8.1.7
-streamlit==1.39.0
--e ../../ml-depth-pro
