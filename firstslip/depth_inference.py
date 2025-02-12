@@ -5,9 +5,9 @@ import torch
 import numpy as np
 import numpy.typing as nptyping
 import streamlit as st
-import pydeck
-import pandas as pd
-import streamlit.components.v1 as components
+# import pydeck
+# import pandas as pd
+# import streamlit.components.v1 as components
 
 
 # Same as default but with different file location for checkpoints
