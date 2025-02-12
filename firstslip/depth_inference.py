@@ -58,7 +58,7 @@ def depth_to_point_cloud_simple(depth_image: nptyping.NDArray):
 
 
 def main() -> None:
-    im_path = Path(__file__).parent / "horses.jpg"
+    im_path = Path(__file__).parent.parent / "common/data/images/13.jpg"
     st.image(str(im_path), caption="Original")
     image, depth = get_depth(im_path)
     st.image(image, caption="From numpy", clamp=True)

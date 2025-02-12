@@ -1,1 +1,3 @@
 checkpoints/*
+ml-depth-pro/build/*
+ml-depth-pro/src/depth_pro.egg-info/*
