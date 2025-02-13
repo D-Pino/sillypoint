@@ -30,6 +30,7 @@ def resize_image(im_path: str | Path, target_dimensions: tuple[int, int] = (640,
     return output_path
 
 
+# TODO: Remove click, let's just use argparse
 @click.command()
 @click.argument("im_path", type=click.Path(exists=True))
 @click.option("--width", "-w", type=int, required=True, help="Target width for resized image")

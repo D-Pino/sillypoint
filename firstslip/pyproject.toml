@@ -8,6 +8,7 @@ dependencies = [
     "click>=8.1.8",
     "depth-pro",
     "opencv-python>=4.11.0.86",
+    "plotly>=6.0.0",
     "ruff>=0.9.6",
     "streamlit>=1.42.0",
 ]
