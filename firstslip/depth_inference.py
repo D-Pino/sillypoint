@@ -63,7 +63,6 @@ def main() -> None:
     image, depth = get_depth(im_path)
     st.image(image, caption="From numpy", clamp=True)
 
-
     # pointcloud = depth_to_point_cloud_simple(depth)
     # pointcloud_df = pd.DataFrame(pointcloud, columns=["x", "y", "z"])
     # target = [pointcloud_df.x.mean(), pointcloud_df.y.mean(), pointcloud_df.z.mean()]

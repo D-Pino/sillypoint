@@ -27,4 +27,4 @@ To play around with python and/or ML models
 
 TODO:
 - Add instructions for repo dev setup
-    - Eg. recommend install precommit via pipx
+    - Eg. Install precommit via pipx and run ```bash pre-commit install``` before trying to commit
