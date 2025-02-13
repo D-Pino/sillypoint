@@ -1,0 +1,4 @@
+fileignoreconfig:
+  - filename: firstslip/uv.lock
+    checksum: 05ce97dec46a6d977e503eca2f8ebde75d96ddd426e4174111ff3bf08e566002
+version: ""
