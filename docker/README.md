@@ -8,4 +8,3 @@ I can imagine that this repo will eventually have an output of one deployed "pro
 a part of the final product (and therefore has a deployment process) will have a folder in here with a `Dockerfile`, `requirements`, etc. Maybe simple services (like `postgres`, `redis` etc)
 don't need their own folder, and will just be entirely defined in the compose stack. The `docker-compose.yml` should stay in this folder, and `up.sh` in the repo root should "just work"
 to launch the product, at least in dev, maybe even in "prod"
-

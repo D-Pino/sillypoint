@@ -18,10 +18,10 @@ def resize_image(im_path: str | Path, target_dimensions: tuple[int, int] = (640,
     resized_img = cv2.resize(im_data, (new_width, new_height), interpolation=cv2.INTER_AREA)
 
     padded = np.zeros((target_height, target_width, 3), dtype=np.uint8)
-    
+
     pad_top = (target_height - new_height) // 2
     pad_left = (target_width - new_width) // 2
-    
+
     padded[pad_top:pad_top+new_height, pad_left:pad_left+new_width] = resized_img
 
     output_path = Path(f"{Path(im_path).stem}_{target_dimensions[0]}x{target_dimensions[1]}{Path(im_path).suffix}")
