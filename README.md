@@ -25,3 +25,6 @@ unset WAYLAND_DISPLAY
 ### **firstslip** 🔬
 To play around with python and/or ML models
 
+TODO:
+- Add instructions for repo dev setup
+    - Eg. recommend install precommit via pipx
