@@ -1,5 +1,5 @@
 # What base image should I use
-FROM python:3.12 
+FROM python:3.12
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client \

@@ -25,3 +25,6 @@ unset WAYLAND_DISPLAY
 ### **firstslip** 🔬
 To play around with python and/or ML models
 
+TODO:
+- Add instructions for repo dev setup
+    - Eg. Install precommit via pipx and run ```bash pre-commit install``` before trying to commit
