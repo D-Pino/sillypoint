@@ -1,10 +1,11 @@
-from pathlib import Path
-import depth_pro
-from depth_pro.depth_pro import DepthProConfig
-import torch
-import numpy as np
 import os
+from pathlib import Path
+
+import depth_pro
+import numpy as np
 import pandas as pd
+import torch
+from depth_pro.depth_pro import DepthProConfig
 
 DATA_DIR = f"{os.getenv('REPO_ROOT', Path(__file__).parent)}/common/data"
 
