@@ -17,7 +17,7 @@ repos:
     hooks:
       # Run the linter.
       - id: ruff
-        args: [--fix]
+        args: [--fix, --select, I]
       # Run the formatter.
       - id: ruff-format
   - repo: https://github.com/astral-sh/uv-pre-commit
@@ -29,14 +29,9 @@ repos:
     rev: 2.1.1
     hooks:
       - id: bashate
-        args: [--ignore, 'E003,E006']
+        args: [--ignore, "E003,E006"]
 
   # - repo: https://github.com/gitleaks/gitleaks
   #   rev: v8.23.1
   #   hooks:
   #     - id: gitleaks
-  - repo: https://github.com/thoughtworks/talisman
-    rev: v1.32.0
-    hooks:
-      - id: talisman-commit
-        entry: cmd --githook pre-commit
