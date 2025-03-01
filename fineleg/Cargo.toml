@@ -9,7 +9,7 @@ chrono = "0.4.39"
 image = "0.25.5"
 itertools = "0.14.0"
 las = "0.9.3"
-polars = { version = "0.45.1", features = ["json"] }
+polars = { version = "0.45.1", features = ["cross_join", "json", "lazy", "random", "round_series"] }
 reqwest = { version = "0.12.12", features = ["blocking", "json"] }
 rerun = "0.21.0"
 serde = "1.0.217"
