@@ -1,0 +1,12 @@
+sudo apt install flex bison gperf
+sudo apt install cmake ninja-build ccache libffi-dev libssl-dev dfu-util libusb-1.0-0
+sudo apt install libudev-dev
+
+
+cargo install espflash
+cargo install cargo-espflash
+cargo install ldproxy
+cargo install espup
+espup install
+
+TBH maybe let's pump the brakes on this. I'm not interested in figuring out embedded while on WSL2. Will wait until I dualboot ubuntu native to work on this
