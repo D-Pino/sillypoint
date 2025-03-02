@@ -1,5 +1,12 @@
+use crate::pointcloud_utils::load_las_to_df;
 use anyhow::Result;
-use polars::prelude::DataFrame;
+use plotly::common::{Marker, Mode};
+use plotly::layout::{
+    AspectMode, AspectRatio, Axis, Camera, CameraCenter, Eye, LayoutScene, Projection,
+    ProjectionType,
+};
+use plotly::{Layout, Plot, Scatter3D};
+use polars::prelude::*;
 use rerun::{RecordingStream, Vec3D};
 
 pub fn render_pointcloud_in_rerun(
@@ -18,5 +25,87 @@ pub fn render_pointcloud_in_rerun(
         .collect();
     let rerun_pointcloud = rerun::Points3D::new(points).with_radii([point_radius.unwrap_or(1.0)]);
     rec.log(entity_path, &rerun_pointcloud)?;
+    Ok(())
+}
+
+pub fn render_las_in_rerun(
+    rec: RecordingStream,
+    entity_path: &str,
+    path: &str,
+    point_radius: Option<f32>,
+) -> Result<()> {
+    render_pointcloud_in_rerun(rec, entity_path, load_las_to_df(path)?, point_radius)?;
+    Ok(())
+}
+
+pub fn render_pointcloud_in_plotly(pointcloud: DataFrame) -> Result<()> {
+    // Try not to render > ~100k points with this
+
+    // Get maxs and mins, for miltiple reasons
+    // TODO: Can I optimize this
+    let x_min = pointcloud.column("x")?.f64()?.min().unwrap();
+    let x_max = pointcloud.column("x")?.f64()?.max().unwrap();
+    let y_min = pointcloud.column("y")?.f64()?.min().unwrap();
+    let y_max = pointcloud.column("y")?.f64()?.max().unwrap();
+    let z_min = pointcloud.column("z")?.f64()?.min().unwrap();
+    let z_max = pointcloud.column("z")?.f64()?.max().unwrap();
+
+    // println!("x_min: {}", x_min);
+    // println!("x_max: {}", x_max);
+    // println!("y_min: {}", y_min);
+    // println!("y_max: {}", y_max);
+    // println!("z_min: {}", z_min);
+    // println!("z_max: {}", z_max);
+
+    // Centers, for the camera
+    let cx = (x_min + x_max) / 2.0;
+    let cy = (y_min + y_max) / 2.0;
+    let cz = (z_min + z_max) / 2.0;
+
+    // println!("cx: {}", cx);
+    // println!("cy: {}", cy);
+    // println!("cz: {}", cz);
+
+    // Ranges, for both the camera and the aspect ratio
+    let x_range = x_max - x_min;
+    let y_range = y_max - y_min;
+    let z_range = z_max - z_min;
+    // println!("x_range: {}", x_range);
+    // println!("y_range: {}", y_range);
+    // println!("z_range: {}", z_range);
+
+    // TODO: Will this camera setup work well if im not using centered pointclouds?
+    // let max_range = x_range.max(y_range).max(z_range);
+    // println!("max_range: {}", max_range);
+
+    // let camera = Camera::new()
+    // The actual data to plot
+    let x = pointcloud.column("x")?.f64()?.to_vec();
+    let y = pointcloud.column("y")?.f64()?.to_vec();
+    let z = pointcloud.column("z")?.f64()?.to_vec();
+    let trace = Scatter3D::new(x, y, z)
+        .mode(Mode::Markers)
+        .marker(Marker::new().size(2).color("#7851A9").opacity(0.3));
+
+    // Layout lets me set the camera and aspect ratio
+    let layout = Layout::new().width(2400).height(1200).scene(
+        LayoutScene::new()
+            .x_axis(Axis::new().range(vec![x_min, x_max]))
+            .y_axis(Axis::new().range(vec![y_min, y_max]))
+            .z_axis(Axis::new().range(vec![z_min, z_max]))
+            .aspect_mode(AspectMode::Manual)
+            .aspect_ratio(AspectRatio::from((x_range, y_range, z_range)))
+            .camera(
+                Camera::new()
+                    .eye(Eye::from((500.0, 500.0, 100.0))) // this doesn't work really for some reason
+                    .center(CameraCenter::from((cx, cy, cz))),
+            ),
+    );
+
+    let mut plot = Plot::new();
+    plot.set_layout(layout);
+    plot.add_trace(trace);
+    plot.show();
+
     Ok(())
 }
