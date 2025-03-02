@@ -1,13 +1,10 @@
 use crate::pointcloud_utils::load_las_to_df;
 use anyhow::Result;
 use plotly::common::{Marker, Mode};
-use plotly::layout::{
-    AspectMode, AspectRatio, Axis, Camera, CameraCenter, Eye, LayoutScene, Projection,
-    ProjectionType,
-};
+use plotly::layout::{AspectMode, AspectRatio, LayoutScene};
 use plotly::{Layout, Plot, Scatter3D};
 use polars::prelude::*;
-use rerun::{RecordingStream, Vec3D};
+use rerun::RecordingStream;
 
 pub fn render_pointcloud_in_rerun(
     rec: RecordingStream,
@@ -15,15 +12,19 @@ pub fn render_pointcloud_in_rerun(
     pointcloud: DataFrame,
     point_radius: Option<f32>,
 ) -> Result<()> {
-    let points: Vec<Vec3D> = pointcloud
-        .column("x")?
+    // TODO: handle null values
+    let x = pointcloud.column("x")?.cast(&DataType::Float32)?;
+    let y = pointcloud.column("y")?.cast(&DataType::Float32)?;
+    let z = pointcloud.column("z")?.cast(&DataType::Float32)?;
+    let points: Vec<(f32, f32, f32)> = x
         .f32()?
         .into_iter()
-        .zip(pointcloud.column("y")?.f32()?)
-        .zip(pointcloud.column("z")?.f32()?)
-        .map(|((x, y), z)| Vec3D::new(x.unwrap(), y.unwrap(), z.unwrap()))
+        .zip(y.f32()?)
+        .zip(z.f32()?)
+        .map(|((x, y), z)| (x.unwrap(), y.unwrap(), z.unwrap()))
         .collect();
-    let rerun_pointcloud = rerun::Points3D::new(points).with_radii([point_radius.unwrap_or(1.0)]);
+
+    let rerun_pointcloud = rerun::Points3D::new(&points).with_radii([point_radius.unwrap_or(0.5)]);
     rec.log(entity_path, &rerun_pointcloud)?;
     Ok(())
 }
@@ -74,7 +75,6 @@ pub fn render_pointcloud_in_plotly(pointcloud: DataFrame) -> Result<()> {
     // println!("y_range: {}", y_range);
     // println!("z_range: {}", z_range);
 
-    // TODO: Will this camera setup work well if im not using centered pointclouds?
     // let max_range = x_range.max(y_range).max(z_range);
     // println!("max_range: {}", max_range);
 
@@ -87,19 +87,15 @@ pub fn render_pointcloud_in_plotly(pointcloud: DataFrame) -> Result<()> {
         .mode(Mode::Markers)
         .marker(Marker::new().size(2).color("#7851A9").opacity(0.3));
 
-    // Layout lets me set the camera and aspect ratio
+    // Layout lets me set the window size, camera position, and aspect ratio
     let layout = Layout::new().width(2400).height(1200).scene(
         LayoutScene::new()
-            .x_axis(Axis::new().range(vec![x_min, x_max]))
-            .y_axis(Axis::new().range(vec![y_min, y_max]))
-            .z_axis(Axis::new().range(vec![z_min, z_max]))
             .aspect_mode(AspectMode::Manual)
-            .aspect_ratio(AspectRatio::from((x_range, y_range, z_range)))
-            .camera(
-                Camera::new()
-                    .eye(Eye::from((500.0, 500.0, 100.0))) // this doesn't work really for some reason
-                    .center(CameraCenter::from((cx, cy, cz))),
-            ),
+            .aspect_ratio(AspectRatio::from((x_range, y_range, z_range))), // .camera(
+                                                                           // Camera::new()
+                                                                           // .eye(Eye::from((500.0, 500.0, 100.0))) // this doesn't work really for some reason
+                                                                           // .center(CameraCenter::from((cx, cy, cz))),
+                                                                           // ),
     );
 
     let mut plot = Plot::new();
