@@ -26,6 +26,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ${REPO_ROOT}/common/data:/data # I use this to help me manually load data into my database
 
   metabase:
     image: metabase/metabase
