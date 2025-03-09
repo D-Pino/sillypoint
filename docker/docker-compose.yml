@@ -27,5 +27,23 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  metabase:
+    image: metabase/metabase
+    container_name: metabase-${ENVIRONMENT:-dev}
+    environment:
+      # Im using the existing sillypoint db to let metabase set up its stuff
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: sillypoint
+      MB_DB_PORT: 5432 # TODO: maybe don't hardcode this port
+      MB_DB_USER: ${POSTGRES_USER} # TODO: maybe get metabase its own user/password
+      MB_DB_PASS: ${POSTGRES_PASSWORD}
+      MB_DB_HOST: db
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+  # TODO: If I really wanted to make this a good dev setup, I would write a setup script that uses Metabase's API to
+  # connect the external data sources (and whatever setup is needed). For now I'll just do it manually in the UI
+
 volumes:
   postgres_data:
