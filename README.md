@@ -1,30 +1,35 @@
-# sillypoint
+# 🎮 SillyPoint
 
-A personal playground repo for learning and experimenting with different technologies
+A personal playground repo for learning and experimenting with different technologies.
 
-## Projects
+## 🚀 Projects
 
-### **batpad** 📝
-A Django-based web application for maybe learning some web dev
+<table>
+  <tr>
+    <td><h3><b>batpad</b> 📝</h3></td>
+    <td>A Django-based web application for maybe learning some web dev</td>
+  </tr>
+  <tr>
+    <td><h3><b>fineleg</b> 🦀</h3></td>
+    <td>A project to explore Rust. Currently toying around with pointclouds, and using rerun for viz</td>
+  </tr>
+  <tr>
+    <td><h3><b>firstslip</b> 🔬</h3></td>
+    <td>To play around with python and/or ML models</td>
+  </tr>
+  <tr>
+    <td><h3><b>cowcorner</b> 🐄</h3></td>
+    <td>Small python project to use sqlalchemy and alembic to manage a database. Might also use this to practise some ETLs and data ingestion</td>
+  </tr>
+</table>
 
-### **fineleg** 🦀
-A project to explore Rust. Currently toying around with pointclouds, using Rerun for viz
+## 🛠️ Dev setup
 
-#### Note to self
-To get rerun working on WSL2 (unfortunately CPU only so far), run:
 ```bash
-export WGPU_BACKEND=Vulkan
+pipx install pre-commit
+pre-commit install
 ```
 
-[Rerun troubleshooting site](https://rerun.io/docs/getting-started/troubleshooting#wsl2) recommends these, but not convinced they help:
-```bash
-export MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
-unset WAYLAND_DISPLAY
-```
+## 📝 TODO
 
-### **firstslip** 🔬
-To play around with python and/or ML models
-
-TODO:
-- Add instructions for repo dev setup
-    - Eg. Install precommit via pipx and run ```bash pre-commit install``` before trying to commit
+- Add proper instructions for repo dev setup, not sure what I have here works
