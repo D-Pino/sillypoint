@@ -77,11 +77,11 @@ WSGI_APPLICATION = "batpad.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("POSTGRES_DB", "sillypoint"),
-        "USER": os.environ.get("POSTGRES_USER"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
-        "HOST": "db",
-        "PORT": 5432,
+        "NAME": os.environ.get("SILLYPOINT_DB_NAME"),
+        "USER": os.environ.get("SILLYPOINT_DB_USER"),
+        "PASSWORD": os.environ.get("SILLYPOINT_DB_PASSWORD"),
+        "HOST": "db_sillypoint",
+        "PORT": os.environ.get("SILLYPOINT_DB_PORT"),
     }
 }
 

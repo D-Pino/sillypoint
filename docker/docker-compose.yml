@@ -9,23 +9,38 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      - db_sillypoint
     volumes:
       -  ${REPO_ROOT}/batpad:/app
     # tty: true
     # stdin_open: true
-    command:
-      - /start.sh
 
-  db:
+  db_sillypoint:
     image: postgres:15
-    container_name: postgres-${ENVIRONMENT:-dev}
-    env_file:
-      - ${REPO_ROOT}/.env
+    container_name: postgres-sillypoint-${ENVIRONMENT:-dev}
+    environment:
+      POSTGRES_DB: ${SILLYPOINT_DB_NAME}
+      POSTGRES_USER: ${SILLYPOINT_DB_USER}
+      POSTGRES_PASSWORD: ${SILLYPOINT_DB_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${SILLYPOINT_DB_PORT}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_sillypoint_data:/var/lib/postgresql/data
+      - ${REPO_ROOT}/common/data:/data # I use this to help me manually load data into my database
+
+  db_odata:
+    image: postgres:15
+    container_name: postgres-odata-${ENVIRONMENT:-dev}
+    environment:
+      POSTGRES_DB: ${ODATA_DB_NAME}
+      POSTGRES_USER: ${ODATA_DB_USER}
+      POSTGRES_PASSWORD: ${ODATA_DB_PASSWORD}
+    ports:
+      - "${ODATA_DB_PORT}:5432"
+    volumes:
+      - postgres_odata_data:/var/lib/postgresql/data
+      - ${REPO_ROOT}/common/data:/data # I use this to help me manually load data into my database
+
 
   metabase:
     image: metabase/metabase
@@ -33,17 +48,18 @@ services:
     environment:
       # Im using the existing sillypoint db to let metabase set up its stuff
       MB_DB_TYPE: postgres
-      MB_DB_DBNAME: sillypoint
-      MB_DB_PORT: 5432 # TODO: maybe don't hardcode this port
-      MB_DB_USER: ${POSTGRES_USER} # TODO: maybe get metabase its own user/password
-      MB_DB_PASS: ${POSTGRES_PASSWORD}
-      MB_DB_HOST: db
+      MB_DB_DBNAME: ${SILLYPOINT_DB_NAME}
+      MB_DB_PORT: ${SILLYPOINT_DB_PORT}
+      MB_DB_USER: ${SILLYPOINT_DB_USER} # TODO: maybe get metabase its own user/password
+      MB_DB_PASS: ${SILLYPOINT_DB_PASSWORD}
+      MB_DB_HOST: db_sillypoint
     ports:
       - "3000:3000"
     depends_on:
-      - db
+      - db_sillypoint
   # TODO: If I really wanted to make this a good dev setup, I would write a setup script that uses Metabase's API to
   # connect the external data sources (and whatever setup is needed). For now I'll just do it manually in the UI
 
 volumes:
-  postgres_data:
+  postgres_sillypoint_data:
+  postgres_odata_data:
