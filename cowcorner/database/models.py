@@ -52,6 +52,7 @@ class Game(Base, UpdatesTrackedMixin):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid7)
     game_date = Column(Date)
+    competition = Column(String(255))
     game_format = Column(FORMATS)
 
     ground_id = Column(UUID(as_uuid=True), ForeignKey("grounds.id"))
@@ -140,8 +141,6 @@ class Delivery(Base, UpdatesTrackedMixin):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid7)
 
     # Game info
-    # TODO: Extract this out into its own table and/or move it to Game, it shouldn't be here
-    competition = Column(String(255))
     game_id = Column(UUID(as_uuid=True), ForeignKey("games.id"))
     innings = Column(Integer)
     over = Column(Integer)
@@ -182,7 +181,7 @@ class Delivery(Base, UpdatesTrackedMixin):
     shot_magnitude = Column(Float)  # idek what this is
 
     # Fielding results
-    fielding_position = Column(String)
+    fielding_position = Column(String(255))
     fielding_action = Column(String(255))
 
     # Runs

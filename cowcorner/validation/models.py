@@ -10,83 +10,47 @@ SQLAlchemy separately.
 """
 
 from datetime import date, datetime
-from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from cowcorner.common import Format, Hand
 
 
-class UpdatesTrackedBase(BaseModel):
-    """Mixin for tracking creation and update timestamps"""
-
-    created_at: datetime | None = Field(
-        default=None, alias="_created_at", description="Timestamp of record creation"
-    )
-    updated_at: datetime | None = Field(
-        default=None, alias="_updated_at", description="Timestamp of last update"
-    )
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-        arbitrary_types_allowed=True,
-        str_strip_whitespace=True,
-        validate_assignment=True,
-    )
+class Game(BaseModel):
+    game_date: date | None = None
+    game_format: Format | None = None
 
 
-# Core Models ----------
-class Ground(UpdatesTrackedBase):
-    id: UUID | None = None
+class Team(BaseModel):
+    name: str = Field(max_length=255)
+
+
+class Ground(BaseModel):
     name: str = Field(max_length=255)
     country: str | None = Field(default=None, max_length=255)
 
 
-class Team(UpdatesTrackedBase):
-    id: UUID | None = None
+class Player(BaseModel):
     name: str = Field(max_length=255)
 
 
-class Player(UpdatesTrackedBase):
-    id: UUID | None = None
-    name: str = Field(max_length=255)
-
-
-class Game(UpdatesTrackedBase):
-    id: UUID | None = None
-    game_date: date | None = None
-    game_format: Format | None = Field(default=None)
-    ground_id: UUID | None = None
-    home_team_id: UUID | None = None
-    away_team_id: UUID | None = None
-
-
-class Delivery(UpdatesTrackedBase):
-    id: UUID | None = None
-    competition: str | None = Field(default=None, max_length=255)
-    game_id: UUID | None = None
-    innings: int | None = Field(default=None, ge=1)
+class Delivery(BaseModel):
+    innings: int | None = Field(default=None, ge=1, le=4)
     over: int | None = Field(default=None, ge=0)
-    ball: int | None = Field(default=None, ge=0)
+    ball: int | None = Field(default=None, ge=0, le=6)
 
-    # Team/Player References
-    batting_team_id: UUID | None = None
-    batsman_id: UUID | None = None
-    bowling_team_id: UUID | None = None
-    bowler_id: UUID | None = None
-    dismissed_player_id: UUID | None = None
-
-    # Player Attributes
+    fielder: str | None = Field(default=None, max_length=255)
     batsman_hand: Hand | None = None
     bowler_hand: Hand | None = None
     bowling_style: str | None = Field(default=None, max_length=255)
 
-    # Delivery Characteristics
+    is_wicket: bool | None = None
+    dismissal_type: str | None = Field(default=None, max_length=255)
+
     line: str | None = Field(default=None, max_length=255)
     length: str | None = Field(default=None, max_length=255)
     variation: str | None = Field(default=None, max_length=255)
 
-    # Batting Outcomes
     foot: str | None = Field(default=None, max_length=255)
     shot: str | None = Field(default=None, max_length=255)
     shot_type: str | None = Field(default=None, max_length=255)
@@ -94,26 +58,17 @@ class Delivery(UpdatesTrackedBase):
     shot_angle: float | None = Field(default=None, ge=0, le=360)
     shot_magnitude: float | None = Field(default=None, ge=0)
 
-    # Fielding Outcomes
     fielding_position: str | None = Field(default=None, max_length=255)
     fielding_action: str | None = Field(default=None, max_length=255)
 
-    # Wicket Information
-    is_wicket: bool | None = None
-    dismissal_type: str | None = Field(default=None, max_length=255)
-
-    # Run Information
     runs: int | None = Field(default=None, ge=0)
     runs_scored: int | None = Field(default=None, ge=0)
     runs_conceded: int | None = Field(default=None, ge=0)
     extras: int | None = Field(default=None, ge=0)
 
-    # Temporal Data
+    commentary: str | None = None
     delivered_at: datetime | None = None
 
-    # Additional Metadata
-    commentary: str | None = None
-    fielder: str | None = Field(default=None, max_length=255)
     zone: str | None = None
     area: str | None = None
     len_var: str | None = Field(default=None, max_length=255)
