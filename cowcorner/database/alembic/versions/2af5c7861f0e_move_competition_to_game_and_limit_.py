@@ -27,9 +27,6 @@ def upgrade() -> None:
     op.execute("""
         CREATE TYPE game_format AS ENUM ('Test', 'First Class', 'ODI', 'T20I', 'T20 Domestic')
     """)
-    op.execute("""
-        CREATE TYPE hand AS ENUM ('Left', 'Right')
-    """)
 
     op.drop_column("deliveries", "competition")
     op.add_column("games", sa.Column("game_date", sa.Date(), nullable=True))
@@ -81,4 +78,3 @@ def downgrade() -> None:
 
     # Had to add these types myself
     op.execute("DROP TYPE game_format")
-    op.execute("DROP TYPE hand")
