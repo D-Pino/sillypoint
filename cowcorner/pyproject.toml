@@ -6,7 +6,10 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "alembic>=1.15.1",
+    "duckdb>=1.2.1",
+    "pandas>=2.2.3",
     "psycopg2-binary>=2.9.10",
+    "pydantic>=2.10.6",
     "sqlalchemy>=2.0.39",
     "uuid7>=0.1.0",
 ]

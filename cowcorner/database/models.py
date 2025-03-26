@@ -17,6 +17,8 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import declarative_base, relationship
 from uuid_extensions import uuid7
 
+from cowcorner.common import Format, Hand
+
 Base = declarative_base()
 
 
@@ -40,15 +42,17 @@ class UpdatesTrackedMixin:
         )
 
 
-FORMATS = Enum("Test", "First Class", "ODI", "T20I", "T20 Domestic", name="format")
+# Using the Format enum values for the SQLAlchemy Enum
+FORMATS = Enum(*(format.value for format in Format), name="game_format")
+HANDS = Enum(*(hand.value for hand in Hand), name="hand")
 
 
 class Game(Base, UpdatesTrackedMixin):
     __tablename__ = "games"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid7)
-    date = Column(Date)
-    format = Column(FORMATS)
+    game_date = Column(Date)
+    game_format = Column(FORMATS)
 
     ground_id = Column(UUID(as_uuid=True), ForeignKey("grounds.id"))
     home_team_id = Column(UUID(as_uuid=True), ForeignKey("teams.id"))
@@ -106,9 +110,6 @@ class Ground(Base, UpdatesTrackedMixin):
     games = relationship("Game", back_populates="ground")
 
 
-HANDS = Enum("Left", "Right", name="hand")
-
-
 class Player(Base, UpdatesTrackedMixin):
     __tablename__ = "players"
 
@@ -139,7 +140,8 @@ class Delivery(Base, UpdatesTrackedMixin):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid7)
 
     # Game info
-    competition = Column(String(255))  # TODO: Extract this out into its own table
+    # TODO: Extract this out into its own table and/or move it to Game, it shouldn't be here
+    competition = Column(String(255))
     game_id = Column(UUID(as_uuid=True), ForeignKey("games.id"))
     innings = Column(Integer)
     over = Column(Integer)
