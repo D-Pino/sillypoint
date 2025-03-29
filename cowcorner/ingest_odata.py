@@ -15,7 +15,7 @@ from cowcorner.common import get_db_url
 DATA_DIR = f"{os.getenv('REPO_ROOT')}/common/data"
 
 
-def get_deliveries_to_ingest(num_deliveries: int = 200_000) -> pd.DataFrame:
+def get_deliveries_to_ingest(num_deliveries: int = 20) -> pd.DataFrame:
     """I don't have a real source of data, so this function gets random deliveries from a
     local csv I have with ~20M deliveries and returns that.
 
@@ -51,17 +51,17 @@ def main():
                         print(
                             f"Player '{player_name}' doesn't exist yet, will be created"
                         )
-                        validated_player = PlayerVal(name=delivery["batsman"])
+                        validated_player = PlayerVal(name=player_name)
                         player = PlayerDB(**validated_player.model_dump())
                         session.add(player)
                         print("added")
                 session.commit()
                 batsman = session.execute(
                     select(PlayerDB).where(PlayerDB.name == delivery["batsman"])
-                ).one_or_none()
+                ).scalar_one()
                 bowler = session.execute(
                     select(PlayerDB).where(PlayerDB.name == delivery["bowler"])
-                ).one_or_none()
+                ).scalar_one()
                 validated_delivery = DeliveryVal(**delivery.to_dict())
                 delivery = DeliveryDB(
                     bowler=bowler, batsman=batsman, **validated_delivery.model_dump()
