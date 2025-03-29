@@ -139,6 +139,7 @@ class Delivery(Base, UpdatesTrackedMixin):
     __tablename__ = "deliveries"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid7)
+    source_id = Column(Integer)
 
     # Game info
     game_id = Column(UUID(as_uuid=True), ForeignKey("games.id"))

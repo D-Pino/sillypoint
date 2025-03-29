@@ -1,3 +1,4 @@
+import os
 from enum import StrEnum
 
 
@@ -12,3 +13,7 @@ class Format(StrEnum):
 class Hand(StrEnum):
     LEFT = "Left"
     RIGHT = "Right"
+
+
+def get_db_url():
+    return f"postgresql://{os.getenv('ODATA_DB_USER')}:{os.getenv('ODATA_DB_PASSWORD')}@localhost:{os.getenv('ODATA_DB_PORT')}/{os.getenv('ODATA_DB_NAME')}"

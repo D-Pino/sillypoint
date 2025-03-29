@@ -9,9 +9,12 @@ these different technologies, so for now I'm keeping it like this so I can play 
 SQLAlchemy separately.
 """
 
+import math
 from datetime import date, datetime
+from typing import Any
 
-from pydantic import BaseModel, Field
+import pandas as pd
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from cowcorner.common import Format, Hand
 
@@ -35,17 +38,20 @@ class Player(BaseModel):
 
 
 class Delivery(BaseModel):
-    innings: int | None = Field(default=None, ge=1, le=4)
+    source_id: int | None = Field(default=None, alias="id")
+    innings: int | None = Field(default=None, ge=1, le=4, alias="inns")
     over: int | None = Field(default=None, ge=0)
-    ball: int | None = Field(default=None, ge=0, le=6)
+    ball: int | None = Field(default=None, ge=0)
 
     fielder: str | None = Field(default=None, max_length=255)
-    batsman_hand: Hand | None = None
-    bowler_hand: Hand | None = None
-    bowling_style: str | None = Field(default=None, max_length=255)
+    batsman_hand: Hand | None = Field(default=None, alias="batsmanHand")
+    bowler_hand: Hand | None = Field(default=None, alias="bowlerHand")
+    bowling_style: str | None = Field(default=None, max_length=255, alias="bowlerType")
 
     is_wicket: bool | None = None
-    dismissal_type: str | None = Field(default=None, max_length=255)
+    dismissal_type: str | None = Field(
+        default=None, max_length=255, alias="dismissalType"
+    )
 
     line: str | None = Field(default=None, max_length=255)
     length: str | None = Field(default=None, max_length=255)
@@ -59,7 +65,9 @@ class Delivery(BaseModel):
     shot_magnitude: float | None = Field(default=None, ge=0)
 
     fielding_position: str | None = Field(default=None, max_length=255)
-    fielding_action: str | None = Field(default=None, max_length=255)
+    fielding_action: str | None = Field(
+        default=None, max_length=255, alias="fielder_action"
+    )
 
     runs: int | None = Field(default=None, ge=0)
     runs_scored: int | None = Field(default=None, ge=0)
@@ -67,10 +75,28 @@ class Delivery(BaseModel):
     extras: int | None = Field(default=None, ge=0)
 
     commentary: str | None = None
-    delivered_at: datetime | None = None
+    delivered_at: datetime | None = Field(default=None, alias="timestamp")
 
     zone: str | None = None
     area: str | None = None
-    len_var: str | None = Field(default=None, max_length=255)
+    len_var: str | None = Field(default=None, max_length=255, alias="len/var")
     year: int | None = None
     elevation: str | None = Field(default=None, max_length=255)
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    @model_validator(mode="before")
+    @classmethod
+    def handle_nans(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            for key, value in data.items():
+                if pd.isna(value):
+                    data[key] = None
+        return data
+
+    @field_validator("year", mode="before")
+    @classmethod
+    def handle_known_null_values(cls, value: Any) -> int | None:
+        if value == "-":
+            return None
+        return value
