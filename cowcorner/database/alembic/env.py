@@ -4,7 +4,7 @@ from alembic import context
 from models import Base
 from sqlalchemy import engine_from_config, pool
 
-from cowcorner.common import get_db_url
+from cowcorner.common import DB_URL
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -60,7 +60,7 @@ def run_migrations_online() -> None:
     """
     connectable = engine_from_config(
         # config.get_section(config.config_ini_section, {}),
-        {"sqlalchemy.url": get_db_url()},
+        {"sqlalchemy.url": DB_URL},
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )

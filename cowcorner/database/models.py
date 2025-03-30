@@ -5,7 +5,6 @@ from sqlalchemy import (
     Column,
     Date,
     DateTime,
-    Enum,
     Float,
     ForeignKey,
     Integer,
@@ -16,8 +15,6 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import declarative_base, relationship
 from uuid_extensions import uuid7
-
-from cowcorner.common import Format, Hand
 
 Base = declarative_base()
 
@@ -42,18 +39,15 @@ class UpdatesTrackedMixin:
         )
 
 
-# Using the Format enum values for the SQLAlchemy Enum
-FORMATS = Enum(*(format.value for format in Format), name="game_format")
-HANDS = Enum(*(hand.value for hand in Hand), name="hand")
-
-
 class Game(Base, UpdatesTrackedMixin):
     __tablename__ = "games"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid7)
+    source_id = Column(Integer)
+
     game_date = Column(Date)
     competition = Column(String(255))
-    game_format = Column(FORMATS)
+    game_format = Column(String(255))
 
     ground_id = Column(UUID(as_uuid=True), ForeignKey("grounds.id"))
     home_team_id = Column(UUID(as_uuid=True), ForeignKey("teams.id"))
@@ -132,6 +126,7 @@ class Player(Base, UpdatesTrackedMixin):
         foreign_keys="Delivery.dismissed_player_id",
         back_populates="dismissed_player",
     )
+    # TODO: Add games? Maybe this has to be via an association table? (good practice)
 
 
 # TODO: Consider restricting some fields (bowling_style, dismissal_type, fielding positions etc) to Enums
@@ -155,8 +150,8 @@ class Delivery(Base, UpdatesTrackedMixin):
     fielder = Column(
         String(255)
     )  # would like this to be a foreign key but data only tracks last name
-    batsman_hand = Column(HANDS)
-    bowler_hand = Column(HANDS)
+    batsman_hand = Column(String(255))
+    bowler_hand = Column(String(255))
     bowling_style = Column(String(255))
 
     ## Results of delivery

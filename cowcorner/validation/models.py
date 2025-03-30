@@ -9,7 +9,6 @@ these different technologies, so for now I'm keeping it like this so I can play 
 SQLAlchemy separately.
 """
 
-import math
 from datetime import date, datetime
 from typing import Any
 
@@ -20,8 +19,19 @@ from cowcorner.common import Format, Hand
 
 
 class Game(BaseModel):
+    source_id: int | None = Field(default=None, alias="fixtureId")
     game_date: date | None = None
+    competition: str = Field(max_length=255)
     game_format: Format | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def handle_nans(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            for key, value in data.items():
+                if pd.isna(value):
+                    data[key] = None
+        return data
 
 
 class Team(BaseModel):
@@ -40,8 +50,8 @@ class Player(BaseModel):
 class Delivery(BaseModel):
     source_id: int | None = Field(default=None, alias="id")
     innings: int | None = Field(default=None, ge=1, le=4, alias="inns")
-    over: int | None = Field(default=None, ge=0)
-    ball: int | None = Field(default=None, ge=0)
+    over: int | None = Field(default=None, ge=1)
+    ball: int | None = Field(default=None, ge=1)
 
     fielder: str | None = Field(default=None, max_length=255)
     batsman_hand: Hand | None = Field(default=None, alias="batsmanHand")
