@@ -1,9 +1,10 @@
-import os
 from logging.config import fileConfig
 
 from alembic import context
 from models import Base
 from sqlalchemy import engine_from_config, pool
+
+from cowcorner.common import DB_URL
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -24,10 +25,6 @@ target_metadata = Base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
-
-
-def get_db_url():
-    return f"postgresql://{os.getenv('ODATA_DB_USER')}:{os.getenv('ODATA_DB_PASSWORD')}@localhost:{os.getenv('ODATA_DB_PORT')}/{os.getenv('ODATA_DB_NAME')}"
 
 
 def run_migrations_offline() -> None:
@@ -63,7 +60,7 @@ def run_migrations_online() -> None:
     """
     connectable = engine_from_config(
         # config.get_section(config.config_ini_section, {}),
-        {"sqlalchemy.url": get_db_url()},
+        {"sqlalchemy.url": DB_URL},
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )

@@ -5,7 +5,6 @@ from sqlalchemy import (
     Column,
     Date,
     DateTime,
-    Enum,
     Float,
     ForeignKey,
     Integer,
@@ -16,8 +15,6 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import declarative_base, relationship
 from uuid_extensions import uuid7
-
-from cowcorner.common import Format, Hand
 
 Base = declarative_base()
 
@@ -42,18 +39,15 @@ class UpdatesTrackedMixin:
         )
 
 
-# Using the Format enum values for the SQLAlchemy Enum
-FORMATS = Enum(*(format.value for format in Format), name="game_format")
-HANDS = Enum(*(hand.value for hand in Hand), name="hand")
-
-
 class Game(Base, UpdatesTrackedMixin):
     __tablename__ = "games"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid7)
+    source_id = Column(Integer)
+
     game_date = Column(Date)
     competition = Column(String(255))
-    game_format = Column(FORMATS)
+    game_format = Column(String(255))
 
     ground_id = Column(UUID(as_uuid=True), ForeignKey("grounds.id"))
     home_team_id = Column(UUID(as_uuid=True), ForeignKey("teams.id"))
@@ -61,12 +55,8 @@ class Game(Base, UpdatesTrackedMixin):
 
     ground = relationship("Ground", back_populates="games")
     deliveries = relationship("Delivery", back_populates="game")
-    home_team = relationship(
-        "Team", foreign_keys=[home_team_id], back_populates="home_games"
-    )
-    away_team = relationship(
-        "Team", foreign_keys=[away_team_id], back_populates="away_games"
-    )
+    home_team = relationship("Team", foreign_keys=[home_team_id], back_populates="home_games")
+    away_team = relationship("Team", foreign_keys=[away_team_id], back_populates="away_games")
 
 
 class Team(Base, UpdatesTrackedMixin):
@@ -75,12 +65,8 @@ class Team(Base, UpdatesTrackedMixin):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid7)
     name = Column(String(255), unique=True, nullable=False)
 
-    home_games = relationship(
-        "Game", foreign_keys="Game.home_team_id", back_populates="home_team"
-    )
-    away_games = relationship(
-        "Game", foreign_keys="Game.away_team_id", back_populates="away_team"
-    )
+    home_games = relationship("Game", foreign_keys="Game.home_team_id", back_populates="home_team")
+    away_games = relationship("Game", foreign_keys="Game.away_team_id", back_populates="away_team")
     deliveries_faced = relationship(
         "Delivery",
         foreign_keys="Delivery.batting_team_id",
@@ -121,24 +107,24 @@ class Player(Base, UpdatesTrackedMixin):
     # batting_hand = Column(HANDS)
     # bowling_style = Column(BOWLING_STYLES)
 
-    deliveries_bowled = relationship(
-        "Delivery", foreign_keys="Delivery.bowler_id", back_populates="bowler"
-    )
-    deliveries_faced = relationship(
-        "Delivery", foreign_keys="Delivery.batsman_id", back_populates="batsman"
-    )
+    deliveries_bowled = relationship("Delivery", foreign_keys="Delivery.bowler_id", back_populates="bowler")
+    deliveries_faced = relationship("Delivery", foreign_keys="Delivery.batsman_id", back_populates="batsman")
     dismissals = relationship(
         "Delivery",
         foreign_keys="Delivery.dismissed_player_id",
         back_populates="dismissed_player",
     )
+    # TODO: Add games? Maybe this has to be via an association table? (good practice)
 
 
 # TODO: Consider restricting some fields (bowling_style, dismissal_type, fielding positions etc) to Enums
 class Delivery(Base, UpdatesTrackedMixin):
     __tablename__ = "deliveries"
+    # I would like to add this constraint but the data has mistakes (not too many but some)
+    # __table_args__ = (UniqueConstraint("game_id", "innings", "over", "ball", name="uq_delivery_position"),)
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid7)
+    source_id = Column(Integer, unique=True)
 
     # Game info
     game_id = Column(UUID(as_uuid=True), ForeignKey("games.id"))
@@ -151,11 +137,9 @@ class Delivery(Base, UpdatesTrackedMixin):
     batsman_id = Column(UUID(as_uuid=True), ForeignKey("players.id"))
     bowling_team_id = Column(UUID(as_uuid=True), ForeignKey("teams.id"))
     bowler_id = Column(UUID(as_uuid=True), ForeignKey("players.id"))
-    fielder = Column(
-        String(255)
-    )  # would like this to be a foreign key but data only tracks last name
-    batsman_hand = Column(HANDS)
-    bowler_hand = Column(HANDS)
+    fielder = Column(String(255))  # would like this to be a foreign key but data only tracks last name
+    batsman_hand = Column(String(255))
+    bowler_hand = Column(String(255))
     bowling_style = Column(String(255))
 
     ## Results of delivery
@@ -175,9 +159,7 @@ class Delivery(Base, UpdatesTrackedMixin):
     shot = Column(String(255))
     shot_type = Column(String(255))
     control = Column(String(255))
-    shot_angle = Column(
-        Float
-    )  # in degrees, and as of now could be an int but future-proofing with Float
+    shot_angle = Column(Float)  # in degrees, and as of now could be an int but future-proofing with Float
     shot_magnitude = Column(Float)  # idek what this is
 
     # Fielding results
@@ -202,19 +184,9 @@ class Delivery(Base, UpdatesTrackedMixin):
     elevation = Column(String(255))  # idk if this is for the shot or the fielding throw
 
     ## Relationships
-    batting_team = relationship(
-        "Team", foreign_keys=[batting_team_id], back_populates="deliveries_faced"
-    )
-    batsman = relationship(
-        "Player", foreign_keys=[batsman_id], back_populates="deliveries_faced"
-    )
-    bowling_team = relationship(
-        "Team", foreign_keys=[bowling_team_id], back_populates="deliveries_bowled"
-    )
-    bowler = relationship(
-        "Player", foreign_keys=[bowler_id], back_populates="deliveries_bowled"
-    )
-    dismissed_player = relationship(
-        "Player", foreign_keys=[dismissed_player_id], back_populates="dismissals"
-    )
+    batting_team = relationship("Team", foreign_keys=[batting_team_id], back_populates="deliveries_faced")
+    batsman = relationship("Player", foreign_keys=[batsman_id], back_populates="deliveries_faced")
+    bowling_team = relationship("Team", foreign_keys=[bowling_team_id], back_populates="deliveries_bowled")
+    bowler = relationship("Player", foreign_keys=[bowler_id], back_populates="deliveries_bowled")
+    dismissed_player = relationship("Player", foreign_keys=[dismissed_player_id], back_populates="dismissals")
     game = relationship("Game", back_populates="deliveries")
