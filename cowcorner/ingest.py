@@ -25,14 +25,14 @@ from typing import Any
 
 import duckdb
 import pandas as pd
+from cowcorner.common import SessionLocal
+from pydantic import TypeAdapter, ValidationError
+from sqlalchemy import select
+
 from database.models import Delivery as DeliveryDB
 from database.models import Game as GameDB
 from database.models import Player as PlayerDB
-from pydantic import TypeAdapter, ValidationError
-from sqlalchemy import select
 from validation.models import Delivery as DeliveryVal
-
-from cowcorner.common import SessionLocal
 
 DATA_DIR = f"{os.getenv('REPO_ROOT')}/common/data"
 
@@ -47,9 +47,7 @@ def get_deliveries_to_ingest(num_deliveries: int) -> pd.DataFrame:
         f"{DATA_DIR}/odata_full.csv",
         ignore_errors=True,  # necessary because this data is not clean
     )
-    return duckdb.sql(
-        f"SELECT * FROM odata_raw ORDER BY random() LIMIT {num_deliveries}"
-    ).df()
+    return duckdb.sql(f"SELECT * FROM odata_raw ORDER BY random() LIMIT {num_deliveries}").df()
 
 
 def validate_delivery_batch(delivery_batch: pd.DataFrame) -> list[DeliveryVal]:
@@ -72,9 +70,7 @@ def validate_deliveries(deliveries: list[dict[str, Any]]) -> list[DeliveryVal]:
             valid_deliveries.append(DeliveryVal.model_validate(delivery))
         except ValidationError:
             print(f"Delivery failed validation: {delivery}")
-    print(
-        f"{len(valid_deliveries)} deliveries out of {len(deliveries)} passed validation"
-    )
+    print(f"{len(valid_deliveries)} deliveries out of {len(deliveries)} passed validation")
     return valid_deliveries
 
 
@@ -89,9 +85,7 @@ def ingest_delivery_batch(delivery_batch: pd.DataFrame) -> int:
     # Validated deliveries are useful later to build our db models
     valid_delivery_map = {d.source_id: d for d in valid_deliveries}
     # Filter out the invalid deliveries from our raw data
-    delivery_batch = delivery_batch[
-        delivery_batch["id"].isin(valid_delivery_map.keys())
-    ]
+    delivery_batch = delivery_batch[delivery_batch["id"].isin(valid_delivery_map.keys())]
 
     # Add deliveries and related models to our database.
     # We technically iterate over the deliveries twice, which in theory is inefficient, but this
@@ -103,9 +97,7 @@ def ingest_delivery_batch(delivery_batch: pd.DataFrame) -> int:
             # TODO: grounds
 
             # Get list of players referenced in this batch of deliveries
-            player_names = pd.unique(
-                pd.concat([delivery_batch["bowler"], delivery_batch["batsman"]])
-            )
+            player_names = pd.unique(pd.concat([delivery_batch["bowler"], delivery_batch["batsman"]]))
             print(f"Found {len(player_names)} players in total in this delivery batch")
 
             # Get list of these players that we already have in the database
@@ -113,10 +105,7 @@ def ingest_delivery_batch(delivery_batch: pd.DataFrame) -> int:
             existing_players = {p.name: p for p in session.scalars(stmt)}
 
             # Get list of the new players to be added, and add them to the db
-            players_to_add = [
-                PlayerDB(name=name)
-                for name in set(player_names) - set(existing_players.keys())
-            ]
+            players_to_add = [PlayerDB(name=name) for name in set(player_names) - set(existing_players.keys())]
             session.add_all(players_to_add)
             print(f"Added {len(players_to_add)} new players to database")
 
@@ -125,9 +114,7 @@ def ingest_delivery_batch(delivery_batch: pd.DataFrame) -> int:
             player_lookup = {**existing_players, **{p.name: p for p in players_to_add}}
 
             # For handling adding of games, we repeat a similar pattern to players'
-            game_data = delivery_batch.drop_duplicates("fixtureId")[
-                ["fixtureId", "matchDate", "competition", "format"]
-            ]
+            game_data = delivery_batch.drop_duplicates("fixtureId")[["fixtureId", "matchDate", "competition", "format"]]
             game_ids = game_data["fixtureId"].to_list()
             print(f"Found {len(game_ids)} games in total in this delivery batch")
 
@@ -137,9 +124,7 @@ def ingest_delivery_batch(delivery_batch: pd.DataFrame) -> int:
             games_to_add = [
                 GameDB(
                     source_id=game.fixtureId,
-                    game_date=game.matchDate.date()
-                    if not pd.isna(game.matchDate)
-                    else None,
+                    game_date=game.matchDate.date() if not pd.isna(game.matchDate) else None,
                     competition=game.competition,
                     game_format=game.format,
                 )
@@ -194,9 +179,7 @@ def main():
 
         total_ingested += ingest_delivery_batch(batch)
 
-        print(
-            f"\nProcessing batch {batch_number}/{num_batchs} ({len(batch)} deliveries)"
-        )
+        print(f"\nProcessing batch {batch_number}/{num_batchs} ({len(batch)} deliveries)")
 
 
 if __name__ == "__main__":
