@@ -55,9 +55,7 @@ class Game(Base, UpdatesTrackedMixin):
 
     ground = relationship("Ground", back_populates="games")
     deliveries = relationship("Delivery", back_populates="game")
-    home_team = relationship(
-        "Team", foreign_keys=[home_team_id], back_populates="home_games"
-    )
+    home_team = relationship("Team", foreign_keys=[home_team_id], back_populates="home")
     away_team = relationship(
         "Team", foreign_keys=[away_team_id], back_populates="away_games"
     )
@@ -132,9 +130,11 @@ class Player(Base, UpdatesTrackedMixin):
 # TODO: Consider restricting some fields (bowling_style, dismissal_type, fielding positions etc) to Enums
 class Delivery(Base, UpdatesTrackedMixin):
     __tablename__ = "deliveries"
+    # I would like to add this constraint but the data has mistakes (not too many but some)
+    # __table_args__ = (UniqueConstraint("game_id", "innings", "over", "ball", name="uq_delivery_position"),)
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid7)
-    source_id = Column(Integer)
+    source_id = Column(Integer, unique=True)
 
     # Game info
     game_id = Column(UUID(as_uuid=True), ForeignKey("games.id"))
