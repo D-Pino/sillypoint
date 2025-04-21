@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.95"
-chrono = "0.4.39"
+chrono = "=0.4.39"
 image = "0.25.5"
 itertools = "0.14.0"
 las = "0.9.3"
