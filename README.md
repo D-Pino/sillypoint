@@ -21,6 +21,10 @@ A personal playground repo for learning and experimenting with different technol
     <td><h3><b>cowcorner</b> 🐄</h3></td>
     <td>Small python project to use sqlalchemy and alembic to manage a database. Might also use this to practise some ETLs and data ingestion</td>
   </tr>
+  <tr>
+    <td><h3><b>thirdman</b> 🤖</h3></td>
+    <td>Robotics simulation exploration using Isaac Sim for learning robotics concepts and simulation</td>
+  </tr>
 </table>
 
 ## 🛠️ Setup dev environment (reminders to self) (ubuntu 24) (this isn't separated by project)
