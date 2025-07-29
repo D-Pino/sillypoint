@@ -4,11 +4,6 @@ import duckdb
 import pandas as pd
 from pydantic import TypeAdapter, ValidationError
 
-# Add grandparent directory to Python path so we can import cowcorner
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
 from cowcorner.validation.models import Delivery as DeliveryVal
 
 DATA_DIR = f"{os.getenv('REPO_ROOT')}/common/data"

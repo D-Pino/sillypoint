@@ -1,10 +1,5 @@
 import argparse
-import sys
 from datetime import datetime, timezone
-from pathlib import Path
-
-# Add grandparent directory to Python path so we can import cowcorner
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 import pandas as pd
 from cowcorner.common import SessionLocal

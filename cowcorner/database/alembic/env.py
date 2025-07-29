@@ -3,11 +3,6 @@ from logging.config import fileConfig
 from alembic import context
 from models import Base
 from sqlalchemy import engine_from_config, pool
-import sys
-from pathlib import Path
-
-# Add grandparent directory to Python path so we can import cowcorner
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 from cowcorner.common import DB_URL
 
