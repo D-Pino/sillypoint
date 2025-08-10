@@ -14,8 +14,6 @@ DEFAULT_NUM_DELIVERIES = 20_000
 DEFAULT_BATCH_SIZE = 1000
 
 
-
-
 def ingest_delivery_batch(delivery_batch: pd.DataFrame) -> int:
     # Validate the raw delivery data
     valid_deliveries = validate_delivery_batch(delivery_batch=delivery_batch)

@@ -17,23 +17,23 @@ echo ""
 cd "$(dirname "$0")"
 
 # Run naive approach
-# echo "🐌 Running naive approach..."
-# echo "----------------------------------------"
-# start_time=$(date +%s.%N)
-# python naive.py --num-deliveries "$NUM_DELIVERIES"
-# end_time=$(date +%s.%N)
-# naive_duration=$(echo "$end_time - $start_time" | bc)
-# echo "Naive approach completed in: ${naive_duration}s"
-# echo ""
-
-# Run moderate approach
-echo "⚡ Running moderate approach..."
+echo "🐌 Running naive approach..."
 echo "----------------------------------------"
 start_time=$(date +%s.%N)
-python moderate.py --num-deliveries "$NUM_DELIVERIES" --batch-size "$BATCH_SIZE"
+python naive.py --num-deliveries "$NUM_DELIVERIES"
 end_time=$(date +%s.%N)
-moderate_duration=$(echo "$end_time - $start_time" | bc)
-echo "Moderate approach completed in: ${moderate_duration}s"
+naive_duration=$(echo "$end_time - $start_time" | bc)
+echo "Naive approach completed in: ${naive_duration}s"
+echo ""
+
+# Run raw_sql approach
+echo "⚡ Running raw_sql approach..."
+echo "----------------------------------------"
+start_time=$(date +%s.%N)
+python raw_sql.py --num-deliveries "$NUM_DELIVERIES" --batch-size "$BATCH_SIZE"
+end_time=$(date +%s.%N)
+raw_sql_duration=$(echo "$end_time - $start_time" | bc)
+echo "Raw SQL approach completed in: ${raw_sql_duration}s"
 echo ""
 
 # Run optimized approach
@@ -51,8 +51,6 @@ echo ""
 # optimized_speedup=$(echo "scale=2; $naive_duration / $optimized_duration" | bc)
 
 echo "=== Results Summary ==="
-# echo "Naive:     ${naive_duration}s"
-# echo "Moderate:  ${moderate_duration}s (${moderate_speedup}x faster)"
-echo "Moderate:  ${moderate_duration}s"
-# echo "Optimized: ${optimized_duration}s (${optimized_speedup}x faster)"
+echo "Naive:     ${naive_duration}s"
+echo "Raw SQL:   ${raw_sql_duration}s"
 echo "Optimized: ${optimized_duration}s"
