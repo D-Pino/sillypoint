@@ -43,7 +43,7 @@ class Game(Base, UpdatesTrackedMixin):
     __tablename__ = "games"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid7)
-    source_id = Column(Integer)
+    source_id = Column(Integer, unique=True, nullable=False)
 
     game_date = Column(Date)
     competition = Column(String(255))

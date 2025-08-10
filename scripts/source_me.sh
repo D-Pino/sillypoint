@@ -10,4 +10,8 @@ if [[ ! -f "$ENV_FILE" ]]; then
 fi
 
 source "$ENV_FILE"
+
+# Add repo root to PYTHONPATH so cowcorner package can be imported
+export PYTHONPATH="$REPO_ROOT:$PYTHONPATH"
+
 set +a
