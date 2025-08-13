@@ -1,17 +1,23 @@
+import os
 import mujoco
 from mujoco import viewer
 
-xml = """
-<mujoco>
-  <worldbody>
-    <geom name="red_box" type="box" size=".2 .2 .2" rgba="1 0 0 1"/>
-    <geom name="green_sphere" pos=".2 .2 .2" size=".1" rgba="0 1 0 1"/>
-  </worldbody>
-</mujoco>
-"""
-model = mujoco.MjModel.from_xml_string(xml)
+REPO_ROOT = os.environ.get("REPO_ROOT", "..")
 
+with open(f"{REPO_ROOT}/thirdman/humanoid_with_conveyor.xml", "r") as f:
+    xml = f.read()
+model = mujoco.MjModel.from_xml_string(xml)
+scene_option = mujoco.MjvOption()
+scene_option.flags[mujoco.mjtVisFlag.mjVIS_JOINT] = True
+
+# data = mujoco.MjData(model)
+# with mujoco.Renderer(model) as renderer:
+#     mujoco.mj_forward(model, data)
+#     renderer.update_scene(data)
+
+#     idk = renderer.render()
+#     print(idk)
 
 
 if __name__ == "__main__":
-    viewer.launch()
+    viewer.launch(model)
