@@ -60,28 +60,28 @@ services:
   # TODO: If I really wanted to make this a good dev setup, I would write a setup script that uses Metabase's API to
   # connect the external data sources (and whatever setup is needed). For now I'll just do it manually in the UI
 
-  thirdman:
-    image: nvcr.io/nvidia/isaac-sim:4.5.0
-    container_name: thirdman-${ENVIRONMENT:-dev}
-    runtime: nvidia
-    command: ./runheadless.sh -v
-    environment:
-      - ACCEPT_EULA=Y
-      - PRIVACY_CONSENT=Y
-      - NVIDIA_VISIBLE_DEVICES=all
-    ports:
-      - "49100:49100"
-    stdin_open: true
-    tty: true
-    volumes:
-      - ~/docker/isaac-sim/cache/kit:/isaac-sim/kit/cache:rw
-      - ~/docker/isaac-sim/cache/ov:/root/.cache/ov:rw
-      - ~/docker/isaac-sim/cache/pip:/root/.cache/pip:rw
-      - ~/docker/isaac-sim/cache/glcache:/root/.cache/nvidia/GLCache:rw
-      - ~/docker/isaac-sim/cache/computecache:/root/.nv/ComputeCache:rw
-      - ~/docker/isaac-sim/logs:/root/.nvidia-omniverse/logs:rw
-      - ~/docker/isaac-sim/data:/root/.local/share/ov/data:rw
-      - ~/docker/isaac-sim/documents:/root/Documents:rw
+  # thirdman:
+  #   image: nvcr.io/nvidia/isaac-sim:4.5.0
+  #   container_name: thirdman-${ENVIRONMENT:-dev}
+  #   runtime: nvidia
+  #   command: ./runheadless.sh -v
+  #   environment:
+  #     - ACCEPT_EULA=Y
+  #     - PRIVACY_CONSENT=Y
+  #     - NVIDIA_VISIBLE_DEVICES=all
+  #   ports:
+  #     - "49100:49100"
+  #   stdin_open: true
+  #   tty: true
+  #   volumes:
+  #     - ~/docker/isaac-sim/cache/kit:/isaac-sim/kit/cache:rw
+  #     - ~/docker/isaac-sim/cache/ov:/root/.cache/ov:rw
+  #     - ~/docker/isaac-sim/cache/pip:/root/.cache/pip:rw
+  #     - ~/docker/isaac-sim/cache/glcache:/root/.cache/nvidia/GLCache:rw
+  #     - ~/docker/isaac-sim/cache/computecache:/root/.nv/ComputeCache:rw
+  #     - ~/docker/isaac-sim/logs:/root/.nvidia-omniverse/logs:rw
+  #     - ~/docker/isaac-sim/data:/root/.local/share/ov/data:rw
+  #     - ~/docker/isaac-sim/documents:/root/Documents:rw
 
 volumes:
   postgres_sillypoint_data:

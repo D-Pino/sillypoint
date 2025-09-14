@@ -3,7 +3,8 @@ name = "thirdman"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.10"
 dependencies = [
-    "mujoco>=3.3.4",
+    "lerobot[all]>=0.3.3",
+    "mujoco==2.3.7", # Can't get too high or it clashes with lerobot
 ]
