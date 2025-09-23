@@ -4687,14 +4687,10 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "lerobot", extra = ["all"] },
-    { name = "mujoco" },
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "lerobot", extras = ["all"], specifier = ">=0.3.3" },
-    { name = "mujoco", specifier = "==2.3.7" },
-]
+requires-dist = [{ name = "lerobot", extras = ["all"], specifier = ">=0.3.3" }]
 
 [[package]]
 name = "tifffile"

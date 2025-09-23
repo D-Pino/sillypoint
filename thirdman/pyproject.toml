@@ -6,5 +6,4 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "lerobot[all]>=0.3.3",
-    "mujoco==2.3.7", # Can't get too high or it clashes with lerobot
 ]
