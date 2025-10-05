@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block title %}Robots{% endblock %}
+
+{% block content %}
+<script id="robots-list-props" type="application/json">
+{{ robots_json|safe }}
+</script>
+<div id="robots-list" data-props-id="robots-list-props"></div>
+{% endblock %}
+

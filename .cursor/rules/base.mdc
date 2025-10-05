@@ -1,0 +1,8 @@
+---
+alwaysApply: true
+---
+
+# Rules
+
+ - The most important aspect of writing code is simplicity. Avoid unnecessary complexity, favor short and simple solutions.
+ - When writing code, less is more. Avoid writing too many lines of code, avoid unnecessary comments or verbose syntax when something shorter/simpler would do the trick. 
