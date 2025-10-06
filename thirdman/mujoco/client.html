@@ -1,0 +1,19 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>MuJoCo WS Stream</title>
+<body style="margin:0; background:#111; display:grid; place-items:center; height:100vh;">
+  <img id="v" style="max-width:100%; height:auto; background:#000; image-rendering:pixelated;" />
+  <script>
+    const ws = new WebSocket("ws://localhost:8000/ws/video");
+    ws.binaryType = "arraybuffer";
+    const img = document.getElementById("v");
+    let lastURL = null;
+
+    ws.onmessage = (ev) => {
+      if (lastURL) URL.revokeObjectURL(lastURL);
+      const blob = new Blob([ev.data], { type: "image/jpeg" });
+      lastURL = URL.createObjectURL(blob);
+      img.src = lastURL;
+    };
+  </script>
+</body>

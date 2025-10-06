@@ -2,7 +2,12 @@
 alwaysApply: true
 ---
 
-# Rules
+# General Principles
 
- - The most important aspect of writing code is simplicity. Avoid unnecessary complexity, favor short and simple solutions.
- - When writing code, less is more. Avoid writing too many lines of code, avoid unnecessary comments or verbose syntax when something shorter/simpler would do the trick. 
+- The most important thing to remember is to MAXIMIZE SIMPLICITY. Avoid unnecessary complexity, FAVOR SHORT AND SIMPLE SOLUTIONS.
+- When writing code, less is more. Avoid writing too many lines of code, avoid unnecessary comments or overly verbose syntax when there are simpler alternatives.
+
+# Python
+
+- Use type hints. Make sure to use the recent type hint syntax, ie prefer list[dict[str, int]] to List[Dict[str, int]]
+- When calling a function, pass arguments by name, ie prefer speak(animal=dog) to speak(dog)
