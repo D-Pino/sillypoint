@@ -9,7 +9,8 @@ export default function Home() {
         <h1 style={styles.title}>SillyPoint Robotics</h1>
         <p style={styles.subtitle}>Build, catalog, and explore your robot fleet.</p>
         <div style={styles.actions}>
-          <a style={{ ...styles.button, ...styles.primary }} href="/robots/">View Robots</a>
+          <a style={{ ...styles.button, ...styles.primary }} href="/sim/">MuJoCo Generator</a>
+          <a style={{ ...styles.button, ...styles.ghost }} href="/robots/">View Robots</a>
           <a style={{ ...styles.button, ...styles.ghost }} href="/admin/">Admin</a>
         </div>
       </section>

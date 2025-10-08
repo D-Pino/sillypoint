@@ -16,10 +16,13 @@ class SimConfig(BaseModel):
 
 
 class Sim:
-    def __init__(self, cfg: SimConfig | None = None):
+    def __init__(self, cfg: SimConfig | None = None, model_xml_str: str | None = None):
         self.cfg = cfg or SimConfig()
 
-        self.model = mujoco.MjModel.from_xml_path(str(self.cfg.model_xml_path))
+        if model_xml_str is not None:
+            self.model = mujoco.MjModel.from_xml_string(model_xml_str)
+        else:
+            self.model = mujoco.MjModel.from_xml_path(str(self.cfg.model_xml_path))
         self.data = mujoco.MjData(self.model)
         self.renderer = mujoco.Renderer(self.model)
 
