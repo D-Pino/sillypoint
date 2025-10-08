@@ -2,6 +2,7 @@ import ReactDOM from 'react-dom/client'
 import RobotsList from './components/robots/RobotList.tsx'
 import RobotDetail from './components/robots/RobotDetail.tsx'
 import Home from './components/home/Home.tsx'
+import MujocoGen from './components/sim/MujocoGen.tsx'
 
 function mount<T>(id: string, render: (el: HTMLElement, props: T) => void) {
   const el = document.getElementById(id)
@@ -28,4 +29,8 @@ mount<{ robot: { id: string; name: string; company: string; urdf: string } }>(
 
 mount<{}>('home-root', (el) => {
   ReactDOM.createRoot(el).render(<Home />)
+})
+
+mount<{}>('sim-root', (el) => {
+  ReactDOM.createRoot(el).render(<MujocoGen />)
 })
