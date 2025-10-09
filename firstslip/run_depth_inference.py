@@ -29,8 +29,8 @@ def get_depth(im_path: str | Path) -> tuple[pd.DataFrame, float]:
     depth_map_output_path = output_dir / f"{Path(im_path).stem}_depth.npy"
     focal_length_output_path = output_dir / f"{Path(im_path).stem}_fx.txt"
     if depth_map_output_path.exists() and focal_length_output_path.exists():
-        depth = pd.DataFrame(np.load(depth_map_output_path))
-        with open(focal_length_output_path, "r") as f:
+        depth = pd.DataFrame(data=np.load(file=depth_map_output_path))
+        with open(file=focal_length_output_path, mode="r") as f:
             focal_length = float(f.read())
         return depth, focal_length
 
@@ -42,18 +42,18 @@ def get_depth(im_path: str | Path) -> tuple[pd.DataFrame, float]:
     model.eval()
 
     # Load and preprocess an image.
-    image, _, f_px = depth_pro.load_rgb(im_path)
-    image = transform(image)
+    image, _, f_px = depth_pro.load_rgb(path=im_path)
+    image = transform(inputs=image)
 
     # Run inference.
-    prediction = model.infer(image, f_px=f_px)
-    depth = pd.DataFrame(prediction["depth"].cpu().numpy())
+    prediction = model.infer(image=image, f_px=f_px)
+    depth = pd.DataFrame(data=prediction["depth"].cpu().numpy())
     focal_length = prediction["focallength_px"].item()
 
     # Save the depth map and focal length for caching purposes
     output_dir.mkdir(parents=True, exist_ok=True)
-    np.save(depth_map_output_path, depth)
-    with focal_length_output_path.open("w") as f:
+    np.save(file=depth_map_output_path, arr=depth)
+    with focal_length_output_path.open(mode="w") as f:
         f.write(str(focal_length))
 
     return (depth, focal_length)
@@ -75,14 +75,14 @@ def depth_map_to_point_cloud(depth_map: pd.DataFrame, focal_length: float) -> pd
     x = (u - cx) * (z / fx)
     y = (v - cy) * (z / fy)
 
-    return pd.DataFrame({"x": x.flatten(), "y": y.flatten(), "z": z.flatten()})
+    return pd.DataFrame(data={"x": x.flatten(), "y": y.flatten(), "z": z.flatten()})
 
 
 # TODO: Add CLI args to this
 def main() -> None:
     im_path = Path(DATA_DIR) / "images/stock_woman.jpg"
-    depth, focal_length = get_depth(im_path)
-    pointcloud_df = depth_map_to_point_cloud(depth, focal_length)
+    depth, focal_length = get_depth(im_path=im_path)
+    pointcloud_df = depth_map_to_point_cloud(depth_map=depth, focal_length=focal_length)
     print(pointcloud_df.head())
 
 

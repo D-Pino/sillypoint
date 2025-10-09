@@ -10,10 +10,10 @@ def robot_list(request):
             {"id": str(robot.id), "name": robot.name, "company": robot.company, "urdf": robot.urdf} for robot in robots
         ]
     }
-    return render(request, "list.html", {"robots": robots, "robots_json": json.dumps(robots_data)})
+    return render(request=request, template_name="list.html", context={"robots": robots, "robots_json": json.dumps(obj=robots_data)})
 
 
 def robot_detail(request, pk):
-    robot = get_object_or_404(Robot, pk=pk)
+    robot = get_object_or_404(klass=Robot, pk=pk)
     robot_data = {"robot": {"id": str(robot.id), "name": robot.name, "company": robot.company, "urdf": robot.urdf}}
-    return render(request, "detail.html", {"robot": robot, "robot_json": json.dumps(robot_data)})
+    return render(request=request, template_name="detail.html", context={"robot": robot, "robot_json": json.dumps(obj=robot_data)})

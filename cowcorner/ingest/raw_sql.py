@@ -24,7 +24,7 @@ def prepare_delivery_data(
     player_lookup: dict[str, int],
     game_lookup: dict[str, int],
 ) -> list[dict]:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(tz=timezone.utc)
     
     delivery_records = []
     for row in delivery_batch.itertuples(index=False):
@@ -68,13 +68,13 @@ def ingest_delivery_batch(delivery_batch: pd.DataFrame) -> int:
 
     with SessionLocal() as session:
         # Check for existing entities first to avoid redundant data preparation
-        player_names = pd.unique(pd.concat([delivery_batch["bowler"], delivery_batch["batsman"]])).astype(str).tolist()
+        player_names = pd.unique(values=pd.concat(objs=[delivery_batch["bowler"], delivery_batch["batsman"]])).astype(str).tolist()
         stmt = select(PlayerDB.id, PlayerDB.name).where(PlayerDB.name.in_(player_names))
-        existing_players = {name: id for id, name in session.execute(stmt)}
+        existing_players = {name: id for id, name in session.execute(statement=stmt)}
         
         game_source_ids = delivery_batch["fixtureId"].unique().astype(int).tolist()
         stmt = select(GameDB.id, GameDB.source_id).where(GameDB.source_id.in_(game_source_ids))
-        existing_games = {source_id: id for id, source_id in session.execute(stmt)}
+        existing_games = {source_id: id for id, source_id in session.execute(statement=stmt)}
 
         # Only prepare data for new entities
         new_player_names = set(player_names) - set(existing_players.keys())
@@ -82,14 +82,14 @@ def ingest_delivery_batch(delivery_batch: pd.DataFrame) -> int:
         
         players_data = []
         if new_player_names:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(tz=timezone.utc)
             players_data = [{"id": uuid7(), "name": str(name), "_created_at": now, "_updated_at": now} for name in new_player_names]
 
         games_data = []
         if new_game_ids:
             game_data = delivery_batch[delivery_batch["fixtureId"].isin(new_game_ids)].drop_duplicates("fixtureId")[["fixtureId", "matchDate", "competition", "format"]]
-            game_data["processed_date"] = game_data["matchDate"].apply(lambda x: x.date() if not pd.isna(x) else None)
-            now = datetime.now(timezone.utc)
+            game_data["processed_date"] = game_data["matchDate"].apply(func=lambda x: x.date() if not pd.isna(obj=x) else None)
+            now = datetime.now(tz=timezone.utc)
             games_data = [
                 {
                     "id": uuid7(),
@@ -111,7 +111,7 @@ def ingest_delivery_batch(delivery_batch: pd.DataFrame) -> int:
             ON CONFLICT (name) DO NOTHING
             """
             print(f"Adding {len(players_data)} new players")
-            session.execute(text(player_sql), players_data)
+            session.execute(statement=text(player_sql), params=players_data)
             
             # Update lookup with new players using the IDs we already generated
             new_players = {p["name"]: p["id"] for p in players_data}
@@ -124,14 +124,19 @@ def ingest_delivery_batch(delivery_batch: pd.DataFrame) -> int:
             ON CONFLICT (source_id) DO NOTHING
             """
             print(f"Adding {len(games_data)} new games")
-            session.execute(text(game_sql), games_data)
+            session.execute(statement=text(game_sql), params=games_data)
             
             # Update lookup with new games using the IDs we already generated
             new_games = {g["source_id"]: g["id"] for g in games_data}
             existing_games.update(new_games)
 
         # Prepare and insert deliveries using existing lookups
-        delivery_records = prepare_delivery_data(delivery_batch, valid_delivery_map, existing_players, existing_games)
+        delivery_records = prepare_delivery_data(
+            delivery_batch=delivery_batch,
+            valid_delivery_map=valid_delivery_map,
+            player_lookup=existing_players,
+            game_lookup=existing_games
+        )
 
         if delivery_records:
             delivery_sql = """
@@ -146,7 +151,7 @@ def ingest_delivery_batch(delivery_batch: pd.DataFrame) -> int:
             ON CONFLICT (source_id) DO NOTHING
             """
             print(f"Adding {len(delivery_records)} deliveries")
-            session.execute(text(delivery_sql), delivery_records)
+            session.execute(statement=text(delivery_sql), params=delivery_records)
 
     ingested_count = len(delivery_records) if 'delivery_records' in locals() else 0
     print(f"Ingested {ingested_count} deliveries using optimized approach")
