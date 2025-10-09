@@ -24,17 +24,17 @@ class UpdatesTrackedMixin:
     @declared_attr
     def _created_at(cls):
         return Column(
-            DateTime(timezone=True),
-            default=lambda: datetime.now(timezone.utc),
+            type_=DateTime(timezone=True),
+            default=lambda: datetime.now(tz=timezone.utc),
             nullable=False,
         )
 
     @declared_attr
     def _updated_at(cls):
         return Column(
-            DateTime(timezone=True),
-            default=lambda: datetime.now(timezone.utc),
-            onupdate=lambda: datetime.now(timezone.utc),
+            type_=DateTime(timezone=True),
+            default=lambda: datetime.now(tz=timezone.utc),
+            onupdate=lambda: datetime.now(tz=timezone.utc),
             nullable=False,
         )
 

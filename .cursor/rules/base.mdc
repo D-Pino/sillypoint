@@ -11,3 +11,11 @@ alwaysApply: true
 
 - Use type hints. Make sure to use the recent type hint syntax, ie prefer list[dict[str, int]] to List[Dict[str, int]]
 - When calling a function, pass arguments by name, ie prefer speak(animal=dog) to speak(dog)
+
+# Frontend
+- For frontend work, I generally use React, with some limited amount of templated html due to ease of integration with django
+- Avoid complex state management when possible
+- In React, use Mantine. Not only should we use Mantine over other frameworks, we should use Mantine over doing custom complex design whenever possible
+- If a component seems reusable, then it is reasonable to extract it into its own "custom" component, albeit one that uses Mantine components
+- UI designs should be clean, simple and understandable. The code for them should also be clean, simple, understandable, and easy to maintain
+- The UI should generally look white as much as possible, black for contrast. When color is needed, use cool colors, like royal blue, cerulean, teal, royal purple. Avoid color gradients, prefer simple block colors, use light/dark versions of colors if you want to provide contrast

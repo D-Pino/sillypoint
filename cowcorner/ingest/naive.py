@@ -17,7 +17,7 @@ DEFAULT_NUM_DELIVERIES = 20_000
 
 def validate_delivery(delivery: dict[str, Any]) -> DeliveryVal | None:
     try:
-        return DeliveryVal.model_validate(delivery)
+        return DeliveryVal.model_validate(obj=delivery)
     except ValidationError as e:
         print(f"Delivery failed validation: {delivery} - {e}")
         return None
@@ -25,18 +25,18 @@ def validate_delivery(delivery: dict[str, Any]) -> DeliveryVal | None:
 
 def ingest_delivery(delivery_data: dict[str, Any]) -> bool:
     # Validate delivery according to Pydantic model
-    if (validated_delivery := validate_delivery(delivery_data)) is None:
+    if (validated_delivery := validate_delivery(delivery=delivery_data)) is None:
         return False
 
     with SessionLocal() as session:
-        bowler, _ = get_or_create(PlayerDB, session, name=delivery_data["bowler"])
-        batsman, _ = get_or_create(PlayerDB, session, name=delivery_data["batsman"])
+        bowler, _ = get_or_create(model=PlayerDB, session=session, name=delivery_data["bowler"])
+        batsman, _ = get_or_create(model=PlayerDB, session=session, name=delivery_data["batsman"])
 
         game, _ = get_or_create(
-            GameDB,
-            session,
+            model=GameDB,
+            session=session,
             source_id=delivery_data["fixtureId"],
-            game_date=delivery_data["matchDate"].date() if not pd.isna(delivery_data["matchDate"]) else None,
+            game_date=delivery_data["matchDate"].date() if not pd.isna(obj=delivery_data["matchDate"]) else None,
             competition=delivery_data["competition"],
             game_format=delivery_data["format"],
         )
@@ -48,7 +48,7 @@ def ingest_delivery(delivery_data: dict[str, Any]) -> bool:
             game=game,
             **validated_delivery.model_dump(),
         )
-        session.add(delivery_db)
+        session.add(instance=delivery_db)
 
     return True
 
@@ -61,7 +61,7 @@ def ingest(num_deliveries: int):
     ingest_count = 0
     for i, delivery in deliveries_to_ingest.iterrows():
         delivery_dict = delivery.to_dict()
-        if ingest_delivery(delivery_dict):
+        if ingest_delivery(delivery_data=delivery_dict):
             ingest_count += 1
 
         if (i + 1) % 100 == 0:

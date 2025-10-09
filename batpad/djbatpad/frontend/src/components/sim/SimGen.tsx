@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { Container, Stack, Title, Text, TextInput, Button } from '@mantine/core'
 
-export default function MujocoGen() {
+export default function SimGen() {
   const [prompt, setPrompt] = useState('a simple box on a plane')
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [status, setStatus] = useState<'idle' | 'generating' | 'streaming' | 'error'>('idle')
@@ -51,38 +52,35 @@ export default function MujocoGen() {
   }
 
   return (
-    <div style={{ display: 'grid', gap: 12 }}>
-      <h1 style={{ margin: 0 }}>MuJoCo Scene Generator</h1>
-      <p style={{ margin: 0, opacity: 0.85 }}>Describe a scene, stream the result.</p>
-      <form onSubmit={handleGenerate} style={{ display: 'grid', gap: 12, marginTop: 8 }}>
-        <input
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Describe the MuJoCo scene"
-          style={{
-            padding: '10px 12px',
-            borderRadius: 8,
-            border: '1px solid rgba(148, 163, 184, 0.35)',
-            background: 'rgba(2,6,23,0.6)',
-            color: '#e5e7eb',
-          }}
-        />
-        <button type="submit" style={{
-          padding: '10px 16px', borderRadius: 10, fontWeight: 600,
-          background: 'linear-gradient(135deg, #2563eb, #22c55e)', color: '#0b1020',
-          border: '1px solid rgba(148, 163, 184, 0.25)'
-        }} disabled={status === 'generating'}>
-          {status === 'generating' ? 'Generating…' : 'Generate & Stream'}
-        </button>
-      </form>
-      <div style={{ marginTop: 8 }}>
-        <img ref={imgRef} alt="stream" style={{ maxWidth: '100%', background: '#000', borderRadius: 8 }} />
-      </div>
-      <p style={{ marginTop: 4, opacity: 0.8, fontSize: 13 }}>
-        Status: {status} {sessionId ? `(session ${sessionId.slice(0, 8)}…)` : ''}
-      </p>
-    </div>
+    <Container size="md" py={40}>
+      <Stack gap="md">
+        <Title order={1}>MuJoCo Scene Generator</Title>
+        <Text c="dimmed">Describe a scene, stream the result.</Text>
+        <form onSubmit={handleGenerate}>
+          <Stack gap="md" mt="xs">
+            <TextInput
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Describe the MuJoCo scene"
+              size="md"
+            />
+            <Button
+              type="submit"
+              variant="outline"
+              disabled={status === 'generating'}
+            >
+              {status === 'generating' ? 'Generating…' : 'Generate & Stream'}
+            </Button>
+          </Stack>
+        </form>
+        <img ref={imgRef} alt="stream" style={{ maxWidth: '100%', borderRadius: 8 }} />
+        <Text size="sm" c="dimmed">
+          Status: {status} {sessionId ? `(session ${sessionId.slice(0, 8)}…)` : ''}
+        </Text>
+      </Stack>
+    </Container>
   )
 }
+
 
 

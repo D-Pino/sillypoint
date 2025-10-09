@@ -27,9 +27,9 @@ class Game(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def handle_nans(cls, data: Any) -> Any:
-        if isinstance(data, dict):
+        if isinstance(obj=data, classinfo=dict):
             for key, value in data.items():
-                if pd.isna(value):
+                if pd.isna(obj=value):
                     data[key] = None
         return data
 
@@ -98,9 +98,9 @@ class Delivery(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def handle_nans(cls, data: Any) -> Any:
-        if isinstance(data, dict):
+        if isinstance(obj=data, classinfo=dict):
             for key, value in data.items():
-                if pd.isna(value):
+                if pd.isna(obj=value):
                     data[key] = None
         return data
 

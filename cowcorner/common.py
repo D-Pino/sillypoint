@@ -23,7 +23,7 @@ class Hand(StrEnum):
 
 # Database utilities
 DB_URL = f"postgresql://{os.getenv('ODATA_DB_USER')}:{os.getenv('ODATA_DB_PASSWORD')}@localhost:{os.getenv('ODATA_DB_PORT')}/{os.getenv('ODATA_DB_NAME')}"
-engine = create_engine(DB_URL)
+engine = create_engine(url=DB_URL)
 SessionLocal = sessionmaker(bind=engine)
 
 # Helper functions
@@ -40,13 +40,13 @@ def get_or_create(
         created_session = False
 
     # TODO: handle race conditions?
-    found_model_instance = session.query(model).filter_by(**kwargs).one_or_none()
+    found_model_instance = session.query(entity=model).filter_by(**kwargs).one_or_none()
     if found_model_instance is not None:
         return found_model_instance, False
 
     # TODO: Add validation using my pydantic models?
     model_instance = model(**kwargs)
-    session.add(model_instance)
+    session.add(instance=model_instance)
     if created_session:
         session.commit()
         session.close()

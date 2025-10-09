@@ -10,19 +10,18 @@ from pydantic import BaseModel
 
 
 class SimConfig(BaseModel):
-    width: int = 640
-    height: int = 360
-    model_xml_path: Path = Path(__file__).parent / "humanoid_with_conveyor.xml"
+    scene_xml: Path | str = Path(__file__).parent / "humanoid_with_conveyor.xml"
 
 
 class Sim:
-    def __init__(self, cfg: SimConfig | None = None, model_xml_str: str | None = None):
+    def __init__(self, cfg: SimConfig | None = None):
         self.cfg = cfg or SimConfig()
 
-        if model_xml_str is not None:
-            self.model = mujoco.MjModel.from_xml_string(model_xml_str)
+        if isinstance(self.cfg.scene_xml, str):
+            self.model = mujoco.MjModel.from_xml_string(self.cfg.scene_xml)
         else:
-            self.model = mujoco.MjModel.from_xml_path(str(self.cfg.model_xml_path))
+            self.model = mujoco.MjModel.from_xml_path(str(self.cfg.scene_xml))
+
         self.data = mujoco.MjData(self.model)
         self.renderer = mujoco.Renderer(self.model)
 
@@ -51,9 +50,6 @@ class Sim:
         return buf.getvalue()
 
     def next_frame_jpeg(self) -> bytes:
-        self.step(1)
+        self.step(n=1)
         rgb = self.render_rgb()
-        return self.encode_jpeg(rgb, 80)
-
-    def close(self) -> None:
-        self.renderer.close()
+        return self.encode_jpeg(img_rgb=rgb)

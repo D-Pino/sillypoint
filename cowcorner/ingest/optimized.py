@@ -34,16 +34,16 @@ def ingest_delivery_batch(delivery_batch: pd.DataFrame) -> int:
         # TODO: grounds
 
         # Get list of players referenced in this batch of deliveries
-        player_names = pd.unique(pd.concat([delivery_batch["bowler"], delivery_batch["batsman"]]))
+        player_names = pd.unique(values=pd.concat(objs=[delivery_batch["bowler"], delivery_batch["batsman"]]))
         print(f"Found {len(player_names)} players in total in this delivery batch")
 
         # Get list of these players that we already have in the database
         stmt = select(PlayerDB).where(PlayerDB.name.in_(player_names))
-        existing_players = {p.name: p for p in session.scalars(stmt)}
+        existing_players = {p.name: p for p in session.scalars(statement=stmt)}
 
         # Get list of the new players to be added, and add them to the db
         players_to_add = [PlayerDB(name=name) for name in set(player_names) - set(existing_players.keys())]
-        session.add_all(players_to_add)
+        session.add_all(instances=players_to_add)
         print(f"Added {len(players_to_add)} new players to database")
 
         # We keep this lookup of players so that we can get players later on when adding deliveries,
@@ -56,19 +56,19 @@ def ingest_delivery_batch(delivery_batch: pd.DataFrame) -> int:
         print(f"Found {len(game_ids)} games in total in this delivery batch")
 
         stmt = select(GameDB).where(GameDB.source_id.in_(game_ids))
-        existing_games = {g.source_id: g for g in session.scalars(stmt)}
+        existing_games = {g.source_id: g for g in session.scalars(statement=stmt)}
 
         games_to_add = [
             GameDB(
                 source_id=game.fixtureId,
-                game_date=game.matchDate.date() if not pd.isna(game.matchDate) else None,
+                game_date=game.matchDate.date() if not pd.isna(obj=game.matchDate) else None,
                 competition=game.competition,
                 game_format=game.format,
             )
             for game in game_data.itertuples()
             if game.fixtureId in set(game_ids) - set(existing_games.keys())
         ]
-        session.add_all(games_to_add)
+        session.add_all(instances=games_to_add)
         print(f"Added {len(games_to_add)} new games to database")
 
         game_lookup: dict[str, GameDB] = {**existing_games, **{g.source_id: g for g in games_to_add}}
@@ -83,7 +83,7 @@ def ingest_delivery_batch(delivery_batch: pd.DataFrame) -> int:
             )
             for delivery_raw in delivery_batch.itertuples(index=False)
         ]
-        session.add_all(deliveries_to_add)
+        session.add_all(instances=deliveries_to_add)
     ingested_count = len(deliveries_to_add)
     print(f"Ingested {ingested_count} deliveries")
     return ingested_count

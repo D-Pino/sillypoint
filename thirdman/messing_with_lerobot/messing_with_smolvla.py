@@ -9,18 +9,18 @@ def main():
     # Can't get GPU working for some reason, dataset won't load tensors onto it
     # device = "cuda" if torch.cuda.is_available() else "cpu"
     device = "cpu"
-    torch.set_default_device(device)
+    torch.set_default_device(device=device)
     print(f"Using device: {device}")
 
     # Load dataset
     print("Loading dataset...")
-    dataset = LeRobotDataset("lerobot/svla_so101_pickplace")
+    dataset = LeRobotDataset(repo_id="lerobot/svla_so101_pickplace")
     print("Dataset loaded")
 
     # I had to manually find the downloaded config file in the cache and remove the "type" field
     # TODO: Find the correct way to load this model
     print("Loading model...")
-    svla_config = SmolVLAConfig.from_pretrained("lerobot/smolvla_base")
+    svla_config = SmolVLAConfig.from_pretrained(pretrained_model_name_or_path="lerobot/smolvla_base")
     policy = make_policy(cfg=svla_config, ds_meta=dataset.meta)
     policy.eval()  # Sets model to evaluation mode
     print("Model loaded.")
@@ -47,7 +47,7 @@ def main():
         # obs["instruction"] = sample["task"] if isinstance(sample["task"], str) else "pick up the cube"
 
         with torch.no_grad():
-            prediction = policy.select_action(sample)
+            prediction = policy.select_action(batch=sample)
 
         print(f"Sample {i + 1}/{num_samples}:")
 
