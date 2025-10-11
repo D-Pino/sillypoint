@@ -20,7 +20,7 @@ def main():
     # I had to manually find the downloaded config file in the cache and remove the "type" field
     # TODO: Find the correct way to load this model
     print("Loading model...")
-    svla_config = SmolVLAConfig.from_pretrained(pretrained_model_name_or_path="lerobot/smolvla_base")
+    svla_config = SmolVLAConfig.from_pretrained(pretrained_name_or_path="lerobot/smolvla_base")
     policy = make_policy(cfg=svla_config, ds_meta=dataset.meta)
     policy.eval()  # Sets model to evaluation mode
     print("Model loaded.")
