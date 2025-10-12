@@ -1,3 +1,4 @@
+# from dataclasses import dataclass
 import time
 import io
 
@@ -9,8 +10,10 @@ from PIL import Image
 from pydantic import BaseModel
 
 
+
+
 class SimConfig(BaseModel):
-    scene_xml: Path | str = Path(__file__).parent / "humanoid_with_conveyor.xml"
+    scene_xml: Path | str = Path(__file__).parent.parent / "scene_assets" / "base_scene.xml"
 
 
 class Sim:
