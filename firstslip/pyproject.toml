@@ -13,8 +13,5 @@ dependencies = [
     "streamlit>=1.42.0",
 ]
 
-[tool.uv.sources]
-depth-pro = { path = "ml-depth-pro" }
-
 [tool.ruff]
 line-length = 120
