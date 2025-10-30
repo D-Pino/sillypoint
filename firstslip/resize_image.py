@@ -1,6 +1,6 @@
+import argparse
 from pathlib import Path
 
-import click
 import cv2
 import numpy as np
 
@@ -31,13 +31,14 @@ def resize_image(im_path: str | Path, target_dimensions: tuple[int, int] = (640,
     return output_path
 
 
-# TODO: Remove click, let's just use argparse
-@click.command()
-@click.argument("im_path", type=click.Path(exists=True))
-@click.option("--width", "-w", type=int, required=True, help="Target width for resized image")
-@click.option("--height", "-h", type=int, required=True, help="Target height for resized image")
-def main(im_path: str | Path, width: int, height: int) -> None:
-    output = resize_image(im_path=im_path, target_dimensions=(width, height))
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Resize and pad an image to target dimensions")
+    parser.add_argument("im_path", type=str, help="Path to the input image")
+    parser.add_argument("-w", "--width", type=int, required=True, help="Target width for resized image")
+    parser.add_argument("-h", "--height", type=int, required=True, help="Target height for resized image")
+
+    args = parser.parse_args()
+    output = resize_image(im_path=args.im_path, target_dimensions=(args.width, args.height))
     print(f"Saved resize to {output}")
 
 
