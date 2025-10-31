@@ -1,0 +1,28 @@
+services:
+  labelstudio:
+    image: heartexlabs/label-studio:latest
+    ports:
+      - "8080:8080"
+    environment:
+      # Create default user with token
+      LABEL_STUDIO_USERNAME: "admin@example.com"
+      LABEL_STUDIO_PASSWORD: "admin12345"
+      LABEL_STUDIO_USER_TOKEN: "label-studio-dev-token-12345"
+      # Custom variables for setup script
+      LS_TOKEN: "label-studio-dev-token-12345"
+      LS_URL: "http://127.0.0.1:8080"
+      LS_PROJECT_NAME: "Defect Detect"
+      LS_CONFIG_XML: "/app/label_studio_tasks.label_config.xml"
+      LS_TASKS_JSON: "/app/label_studio_tasks.json"
+      # Label Studio configuration
+      LABEL_STUDIO_ENABLE_LEGACY_API_TOKEN: "true"
+      LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED: "true"
+      LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT: /data/local-files
+    volumes:
+      - ../data:/data/local-files
+      - ./setup.py:/app/setup.py
+      - ./start.sh:/app/start.sh
+      - ../data/defect_detect/label_studio_tasks.label_config.xml:/app/label_studio_tasks.label_config.xml
+      - ../data/defect_detect/label_studio_tasks.json:/app/label_studio_tasks.json
+    command: /bin/bash /app/start.sh
+
