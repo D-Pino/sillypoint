@@ -78,13 +78,16 @@ def transform_bbox_flip(
     return x, y, w, h
 
 
-def augment_data(coco_json_filename: str, output_dir: str, image_path_override: str | None = None) -> None:
+def augment_data(coco_json_filename: str, output_dir: str) -> None:
     coco_json_path = Path(coco_json_filename)
     with coco_json_path.open(mode="r") as f:
         coco_data = json.load(f)
 
     out_path = Path(output_dir)
     out_path.mkdir(parents=True, exist_ok=True)
+    
+    # Get the base directory from the COCO JSON path
+    base_dir = coco_json_path.parent
 
     # Create combined COCO data structure with original data
     combined_coco = {
@@ -112,12 +115,12 @@ def augment_data(coco_json_filename: str, output_dir: str, image_path_override: 
 
     for image_info in coco_data["images"]:
         image_file_name = image_info.get("file_name")
-        image_path = (
-            coco_json_path.parent / image_file_name if image_path_override is None else Path(image_path_override)
-        )
+        image_path = base_dir / image_file_name
+        
         if not image_path.exists():
             print(f"Warning: No image at {image_path}, skipping...")
             continue
+            
         img = cv2.imread(filename=str(image_path))
 
         img_height, img_width = img.shape[:2]
@@ -206,12 +209,8 @@ def cli():
         default="data/defect_detect/augmented",
         help="Directory to save augmented images and annotations (default: data/defect_detect/augmented)",
     )
-    parser.add_argument(
-        "--image-path",
-        help="Override the image path from COCO file with a local image. Only works if it's a single image (for testing).",
-    )
     args = parser.parse_args()
-    augment_data(coco_json_filename=args.coco_json_path, output_dir=args.output_dir, image_path_override=args.image_path)
+    augment_data(coco_json_filename=args.coco_json_path, output_dir=args.output_dir)
 
 
 if __name__ == "__main__":
