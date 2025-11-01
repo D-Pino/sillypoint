@@ -11,11 +11,11 @@ def rotate_image(img: np.ndarray, angle: int) -> np.ndarray:
     if angle == 0:
         return img
     elif angle == 90:
-        return cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+        return cv2.rotate(src=img, rotateCode=cv2.ROTATE_90_CLOCKWISE)
     elif angle == 180:
-        return cv2.rotate(img, cv2.ROTATE_180)
+        return cv2.rotate(src=img, rotateCode=cv2.ROTATE_180)
     elif angle == 270:
-        return cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        return cv2.rotate(src=img, rotateCode=cv2.ROTATE_90_COUNTERCLOCKWISE)
     else:
         raise ValueError(f"Angle must be 0, 90, 180, or 270, got {angle}")
 
@@ -23,9 +23,9 @@ def rotate_image(img: np.ndarray, angle: int) -> np.ndarray:
 def augment_image(img: np.ndarray, angle: int, flip_h: bool, flip_v: bool) -> np.ndarray:
     augmented = rotate_image(img, angle)
     if flip_h:
-        augmented = cv2.flip(augmented, 1)
+        augmented = cv2.flip(src=augmented, flipCode=1)
     if flip_v:
-        augmented = cv2.flip(augmented, 0)
+        augmented = cv2.flip(src=augmented, flipCode=0)
     return augmented
 
 
@@ -56,13 +56,11 @@ def transform_bbox_rotate(
     if angle == 0:
         return x, y, w, h
     elif angle == 90:
-        # 90 degrees clockwise: new image is (height, width)
-        return y, img_width - x - w, h, w
+        return img_height - (y + h), x, h, w
     elif angle == 180:
-        return img_width - x - w, img_height - y - h, w, h
+        return img_width - (x + w), img_height - (y + h), w, h
     elif angle == 270:
-        # 270 degrees clockwise (90 counter-clockwise): new image is (height, width)
-        return img_height - y - h, x, h, w
+        return y, img_width - (x + w), h, w
     else:
         raise ValueError(f"Angle must be 0, 90, 180, or 270, got {angle}")
 
@@ -73,20 +71,20 @@ def transform_bbox_flip(
     x, y, w, h = bbox
 
     if flip_h:
-        x = img_width - x - w
+        x = img_width - (x + w)
     if flip_v:
-        y = img_height - y - h
+        y = img_height - (y + h)
 
     return x, y, w, h
 
 
-def main(coco_json_filename: str = "result.json", image_path_override: str | None = None) -> None:
+def augment_data(coco_json_filename: str, output_dir: str, image_path_override: str | None = None) -> None:
     coco_json_path = Path(coco_json_filename)
-    with coco_json_path.open() as f:
+    with coco_json_path.open(mode="r") as f:
         coco_data = json.load(f)
 
-    output_dir = Path(__file__).parent / "data" / "defect_detect"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    out_path = Path(output_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
 
     # Create combined COCO data structure with original data
     combined_coco = {
@@ -118,45 +116,31 @@ def main(coco_json_filename: str = "result.json", image_path_override: str | Non
             coco_json_path.parent / image_file_name if image_path_override is None else Path(image_path_override)
         )
         if not image_path.exists():
-            raise FileNotFoundError(f"No image at {image_path}")
-        img = cv2.imread(str(image_path))
+            print(f"Warning: No image at {image_path}, skipping...")
+            continue
+        img = cv2.imread(filename=str(image_path))
+
         img_height, img_width = img.shape[:2]
 
         # Copy original image to new output directory
-        original_new_output_path = output_dir / f"{image_path.stem}.jpg"
-        cv2.imwrite(str(original_new_output_path), img)
+        original_new_output_path = out_path / f"{image_path.stem}.jpg"
+        cv2.imwrite(filename=str(original_new_output_path), img=img)
 
         # Add original image info with new file name
         original_image_info = copy.deepcopy(image_info)
         original_image_info["file_name"] = f"{image_path.stem}.jpg"
         combined_coco["images"].append(original_image_info)
 
-        # for ann in coco_data["annotations"]:
-        #     if ann["image_id"] != image_info["id"]:
-        #         continue
-        #
-        #     category_name = categories_map[ann["category_id"]]
-        #     ann_id = ann["id"]
-        #
-        #     x, y, w, h = map(int, ann["bbox"])
-        #     cropped = img[y : y + h, x : x + w]
-        #
-        #     # Apply all augmentation combinations to the cropped bbox
-        #     for angle in angles:
-        #         for flip_h, flip_v in flip_options:
-        #             augmented = augment_image(cropped, angle, flip_h, flip_v)
-        #             suffix = get_augmentation_suffix(angle, flip_h, flip_v)
-        #             output_path = output_dir / f"{category_name}_{ann_id}_{suffix}.jpg"
-        #             cv2.imwrite(str(output_path), augmented)
+        
 
         # Apply all augmentation combinations to the main image
         for angle, flip_h, flip_v in augmentation_configs:
             suffix = get_augmentation_suffix(angle, flip_h, flip_v)
 
             # Save augmented image
-            augmented = augment_image(img, angle, flip_h, flip_v)
-            output_path = output_dir / f"{image_path.stem}_{suffix}.jpg"
-            cv2.imwrite(str(output_path), augmented)
+            augmented = augment_image(img=img, angle=angle, flip_h=flip_h, flip_v=flip_v)
+            output_path = out_path / f"{image_path.stem}_{suffix}.jpg"
+            cv2.imwrite(filename=str(output_path), img=augmented)
 
             # Calculate img dimensions after augmentation
             if angle in [90, 270]:
@@ -205,17 +189,30 @@ def main(coco_json_filename: str = "result.json", image_path_override: str | Non
     combined_coco["annotations"].sort(key=lambda x: x["id"])
 
     # Save combined COCO JSON
-    json_output_path = output_dir / "annotations_coco.json"
+    json_output_path = out_path / "annotations_coco.json"
     with json_output_path.open("w") as f:
         json.dump(combined_coco, f, indent=2)
 
 
-if __name__ == "__main__":
+def cli():
     parser = argparse.ArgumentParser(description="Augment images and generate COCO JSON files")
-    parser.add_argument("--coco-json-path", help="Path to COCO-style JSON file")
+    parser.add_argument(
+        "--coco-json-path",
+        default="data/defect_detect/scales_cropped_out/annotations_coco.json",
+        help="Path to COCO-style JSON file (default: data/defect_detect/scales_cropped_out/annotations_coco.json)",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default="data/defect_detect/augmented",
+        help="Directory to save augmented images and annotations (default: data/defect_detect/augmented)",
+    )
     parser.add_argument(
         "--image-path",
         help="Override the image path from COCO file with a local image. Only works if it's a single image (for testing).",
     )
     args = parser.parse_args()
-    main(coco_json_filename=args.coco_json_path, image_path_override=args.image_path)
+    augment_data(coco_json_filename=args.coco_json_path, output_dir=args.output_dir, image_path_override=args.image_path)
+
+
+if __name__ == "__main__":
+    cli()
