@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 
 
-def get_image_dimensions(im_path: str | Path) -> tuple[int, int] | None:
+def get_image_dimensions(im_path: str | Path) -> tuple[int, int]:
     im_data = cv2.imread(filename=str(im_path))
     return im_data.shape[:2]
 
