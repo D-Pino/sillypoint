@@ -1,5 +1,6 @@
-from pathlib import Path
+import argparse
 import json
+from pathlib import Path
 
 import cv2 as cv
 import numpy as np
@@ -15,7 +16,7 @@ def crop_image(image_path: str, output_dir: Path, debug: bool = False) -> tuple[
     img_h, img_w = img.shape[:2]
 
     if debug:
-        debug_dir = input_path.parent / "debug"
+        debug_dir = out_path / "debug"
         debug_dir.mkdir(exist_ok=True)
         cv.imwrite(str(debug_dir / f"{input_path.stem}_00_original.jpg"), img)
 
@@ -80,26 +81,21 @@ def crop_image(image_path: str, output_dir: Path, debug: bool = False) -> tuple[
     return crop, (x0, y0, x1, y1)
 
 
-def crop_main_image(coco_json_path: str, output_dir: str, debug: bool = False):
+def crop_main_image(coco_json_path: str, output_dir: str | None, debug: bool = False):
     annotations_path = Path(coco_json_path)
     if not annotations_path.exists():
         raise FileNotFoundError(f"COCO JSON file not found: {coco_json_path}")
 
-    out_path = Path(output_dir)
+    out_path = Path(output_dir) if output_dir else annotations_path.parent.parent / "scales_cropped_out"
     out_path.mkdir(parents=True, exist_ok=True)
 
     # Load COCO annotations
-    with open(annotations_path, "r") as f:
+    with annotations_path.open(mode="r") as f:
         coco_data = json.load(f)
     print(f"Loaded annotations from {annotations_path}")
 
     # Get the base directory from the COCO JSON path
     base_dir = annotations_path.parent
-
-    # Create mapping from filename to image_id
-    filename_to_image_id = {}
-    for img in coco_data["images"]:
-        filename_to_image_id[img["file_name"]] = img["id"]
 
     # Track transformed data
     transformed_images = []
@@ -108,57 +104,53 @@ def crop_main_image(coco_json_path: str, output_dir: str, debug: bool = False):
     print(f"Found {len(coco_data['images'])} images to process")
     for image_info in coco_data["images"]:
         image_file_name = image_info["file_name"]
-        image_file = base_dir / image_file_name
+        image_file_path = base_dir / image_file_name
 
-        if not image_file.exists():
-            print(f"Warning: Image not found: {image_file}, skipping...")
+        if not image_file_path.exists():
+            print(f"Warning: Image not found: {image_file_path}, skipping...")
             continue
 
-        try:
-            crop, (x0, y0, x1, y1) = crop_image(image_path=str(image_file), output_dir=out_path, debug=debug)
+        crop, (x0, y0, x1, y1) = crop_image(image_path=str(image_file_path), output_dir=out_path, debug=debug)
 
-            # Transform annotations
-            image_id = image_info["id"]
+        # Transform annotations
+        image_id = image_info["id"]
 
-            # Update image info
-            cropped_height, cropped_width = crop.shape[:2]
-            transformed_img = image_info.copy()
-            transformed_img["file_name"] = f"{image_file.stem}_cropped{image_file.suffix}"
-            transformed_img["width"] = int(cropped_width)
-            transformed_img["height"] = int(cropped_height)
-            transformed_images.append(transformed_img)
+        # Update image info
+        cropped_height, cropped_width = crop.shape[:2]
+        transformed_img = image_info.copy()
+        transformed_img["file_name"] = f"{image_file_path.stem}_cropped{image_file_path.suffix}"
+        transformed_img["width"] = int(cropped_width)
+        transformed_img["height"] = int(cropped_height)
+        transformed_images.append(transformed_img)
 
-            # Transform bounding boxes
-            for ann in coco_data["annotations"]:
-                if ann["image_id"] == image_id:
-                    bbox = ann["bbox"]
-                    old_x, old_y, width, height = bbox
+        # Transform bounding boxes
+        for ann in coco_data["annotations"]:
+            if ann["image_id"] == image_id:
+                bbox = ann["bbox"]
+                old_x, old_y, width, height = bbox
 
-                    # Transform to cropped coordinates
-                    new_x = old_x - x0
-                    new_y = old_y - y0
+                # Transform to cropped coordinates
+                new_x = old_x - x0
+                new_y = old_y - y0
 
-                    # Check if bbox is still within the cropped image
-                    if new_x + width > 0 and new_y + height > 0 and new_x < cropped_width and new_y < cropped_height:
-                        # Clip to image boundaries
-                        clipped_x = max(0, new_x)
-                        clipped_y = max(0, new_y)
-                        clipped_width = min(new_x + width, cropped_width) - clipped_x
-                        clipped_height = min(new_y + height, cropped_height) - clipped_y
+                # Check if bbox is still within the cropped image
+                if new_x + width > 0 and new_y + height > 0 and new_x < cropped_width and new_y < cropped_height:
+                    # Clip to image boundaries
+                    clipped_x = max(0, new_x)
+                    clipped_y = max(0, new_y)
+                    clipped_width = min(new_x + width, cropped_width) - clipped_x
+                    clipped_height = min(new_y + height, cropped_height) - clipped_y
 
-                        transformed_ann = ann.copy()
-                        # Convert to Python native types for JSON serialization
-                        transformed_ann["bbox"] = [
-                            float(clipped_x),
-                            float(clipped_y),
-                            float(clipped_width),
-                            float(clipped_height),
-                        ]
-                        transformed_ann["area"] = float(clipped_width * clipped_height)
-                        transformed_annotations.append(transformed_ann)
-
-        except Exception as e:
-            print(f"Error processing {image_file_name}: {e}")
+                    transformed_ann = ann.copy()
+                    # Convert to Python native types for JSON serialization
+                    transformed_ann["bbox"] = [
+                        float(clipped_x),
+                        float(clipped_y),
+                        float(clipped_width),
+                        float(clipped_height),
+                    ]
+                    transformed_ann["area"] = float(clipped_width * clipped_height)
+                    transformed_annotations.append(transformed_ann)
 
     # Save transformed annotations
     if transformed_images:
@@ -176,19 +168,11 @@ def crop_main_image(coco_json_path: str, output_dir: str, debug: bool = False):
 
 
 def cli():
-    import argparse
-
     parser = argparse.ArgumentParser(description="Crop images to largest content region")
     parser.add_argument(
-        "--coco-json-path",
-        default="data/defect_detect/originals/_annotations.coco.json",
-        help="Path to COCO JSON file (default: data/defect_detect/originals/_annotations.coco.json)",
+        "--coco-json-path", default="data/defect_detect/originals/_annotations.coco.json", help="Path to COCO JSON file"
     )
-    parser.add_argument(
-        "--output-dir",
-        default="data/defect_detect/scales_cropped_out",
-        help="Directory to save cropped images (default: data/defect_detect/scales_cropped_out)",
-    )
+    parser.add_argument("--output-dir", help="Directory to save cropped images")
     parser.add_argument("--debug", action="store_true", help="Save intermediate debug images")
 
     args = parser.parse_args()

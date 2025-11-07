@@ -10,12 +10,12 @@ def clean_name(name: str) -> str:
     return re.sub(r"[^a-zA-Z0-9]+", "_", Path(name).stem).strip("_")
 
 
-def crop_bboxes(coco_json_filename: str, output_dir: str) -> None:
+def crop_bboxes(coco_json_filename: str, output_dir: str | None) -> None:
     coco_json_path = Path(coco_json_filename)
     with coco_json_path.open(mode="r") as f:
         coco_data = json.load(f)
 
-    out_path = Path(output_dir)
+    out_path = Path(output_dir) if output_dir else coco_json_path.parent.parent / "bboxes_cropped"
     out_path.mkdir(parents=True, exist_ok=True)
 
     categories_map = {cat["id"]: cat["name"] for cat in coco_data["categories"]}
@@ -70,12 +70,11 @@ def cli():
     parser.add_argument(
         "--coco-json-path",
         default="data/defect_detect/scales_cropped_out/annotations_coco.json",
-        help="Path to COCO-style JSON file (default: data/defect_detect/scales_cropped_out/annotations_coco.json)",
+        help="Path to COCO-style JSON file",
     )
     parser.add_argument(
         "--output-dir",
-        default="data/defect_detect/bboxes_cropped",
-        help="Directory to save cropped bounding boxes (default: data/defect_detect/bboxes_cropped)",
+        help="Directory to save cropped bounding boxes (default: 'bboxes_cropped' folder in same directory as COCO file)",
     )
     args = parser.parse_args()
     crop_bboxes(coco_json_filename=args.coco_json_path, output_dir=args.output_dir)
