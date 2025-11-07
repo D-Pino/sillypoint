@@ -10,7 +10,8 @@ alwaysApply: true
 # Python
 
 - Use type hints. Make sure to use the recent type hint syntax, ie prefer list[dict[str, int]] to List[Dict[str, int]]
-- When calling a function, pass arguments by name, ie prefer speak(animal=dog) to speak(dog)
+- When calling a function, pass arguments by name, ie prefer speak(animal=dog) (correct) rather than speak(dog) (wrong)
+  - I'm going to reiterate since this is a rule that AI code generators mess up often. WHEN CALLING A FUNCTION, PASS ARGUMENTS BY NAME. Prefer save(im_path=cat.jpg) over save(cat.jpg)
 
 # Frontend
 - For frontend work, I generally use React, with some limited amount of templated html due to ease of integration with django

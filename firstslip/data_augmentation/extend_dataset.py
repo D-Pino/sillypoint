@@ -20,16 +20,16 @@ def rotate_image(img: np.ndarray, angle: int) -> np.ndarray:
         raise ValueError(f"Angle must be 0, 90, 180, or 270, got {angle}")
 
 
-def augment_image(img: np.ndarray, angle: int, flip_h: bool, flip_v: bool) -> np.ndarray:
-    augmented = rotate_image(img, angle)
+def transform_image(img: np.ndarray, angle: int, flip_h: bool, flip_v: bool) -> np.ndarray:
+    transformed = rotate_image(img, angle)
     if flip_h:
-        augmented = cv2.flip(src=augmented, flipCode=1)
+        transformed = cv2.flip(src=transformed, flipCode=1)
     if flip_v:
-        augmented = cv2.flip(src=augmented, flipCode=0)
-    return augmented
+        transformed = cv2.flip(src=transformed, flipCode=0)
+    return transformed
 
 
-def get_augmentation_suffix(angle: int, flip_h: bool, flip_v: bool) -> str:
+def get_transformation_suffix(angle: int, flip_h: bool, flip_v: bool) -> str:
     parts = []
 
     if angle == 0 and not flip_h and not flip_v:
@@ -78,14 +78,14 @@ def transform_bbox_flip(
     return x, y, w, h
 
 
-def augment_data(coco_json_filename: str, output_dir: str) -> None:
+def transform_dataset(coco_json_filename: str, output_dir: str | None) -> None:
     coco_json_path = Path(coco_json_filename)
     with coco_json_path.open(mode="r") as f:
         coco_data = json.load(f)
 
-    out_path = Path(output_dir)
+    out_path = Path(output_dir) if output_dir else coco_json_path.parent.parent / "transformed"
     out_path.mkdir(parents=True, exist_ok=True)
-    
+
     # Get the base directory from the COCO JSON path
     base_dir = coco_json_path.parent
 
@@ -97,8 +97,8 @@ def augment_data(coco_json_filename: str, output_dir: str) -> None:
         "info": copy.deepcopy(coco_data.get("info", {})),
     }
 
-    # Define all unique augmentations
-    augmentation_configs = [
+    # Define all unique transformations
+    transformation_configs = [
         # (0, False, False),  # original
         (90, False, False),  # rot90
         (180, False, False),  # rot180
@@ -116,13 +116,12 @@ def augment_data(coco_json_filename: str, output_dir: str) -> None:
     for image_info in coco_data["images"]:
         image_file_name = image_info.get("file_name")
         image_path = base_dir / image_file_name
-        
+
         if not image_path.exists():
             print(f"Warning: No image at {image_path}, skipping...")
             continue
-            
-        img = cv2.imread(filename=str(image_path))
 
+        img = cv2.imread(filename=str(image_path))
         img_height, img_width = img.shape[:2]
 
         # Copy original image to new output directory
@@ -134,32 +133,30 @@ def augment_data(coco_json_filename: str, output_dir: str) -> None:
         original_image_info["file_name"] = f"{image_path.stem}.jpg"
         combined_coco["images"].append(original_image_info)
 
-        
+        # Apply all transformation combinations to the main image
+        for angle, flip_h, flip_v in transformation_configs:
+            suffix = get_transformation_suffix(angle, flip_h, flip_v)
 
-        # Apply all augmentation combinations to the main image
-        for angle, flip_h, flip_v in augmentation_configs:
-            suffix = get_augmentation_suffix(angle, flip_h, flip_v)
-
-            # Save augmented image
-            augmented = augment_image(img=img, angle=angle, flip_h=flip_h, flip_v=flip_v)
+            # Save transformed image
+            transformed = transform_image(img=img, angle=angle, flip_h=flip_h, flip_v=flip_v)
             output_path = out_path / f"{image_path.stem}_{suffix}.jpg"
-            cv2.imwrite(filename=str(output_path), img=augmented)
+            cv2.imwrite(filename=str(output_path), img=transformed)
 
-            # Calculate img dimensions after augmentation
+            # Calculate img dimensions after transformation
             if angle in [90, 270]:
                 new_width, new_height = img_height, img_width
             else:
                 new_width, new_height = img_width, img_height
 
             # Add image info to combined COCO
-            augmented_image_info = {
+            transformed_image_info = {
                 "id": image_id_counter,
                 "license": 1,
                 "file_name": f"{image_path.stem}_{suffix}.jpg",
                 "height": new_height,
                 "width": new_width,
             }
-            combined_coco["images"].append(augmented_image_info)
+            combined_coco["images"].append(transformed_image_info)
 
             # Transform and add annotations
             for ann in coco_data["annotations"]:
@@ -198,19 +195,15 @@ def augment_data(coco_json_filename: str, output_dir: str) -> None:
 
 
 def cli():
-    parser = argparse.ArgumentParser(description="Augment images and generate COCO JSON files")
+    parser = argparse.ArgumentParser(description="Transform images to extend dataset")
     parser.add_argument(
         "--coco-json-path",
         default="data/defect_detect/scales_cropped_out/annotations_coco.json",
-        help="Path to COCO-style JSON file (default: data/defect_detect/scales_cropped_out/annotations_coco.json)",
+        help="Path to COCO-style JSON file",
     )
-    parser.add_argument(
-        "--output-dir",
-        default="data/defect_detect/augmented",
-        help="Directory to save augmented images and annotations (default: data/defect_detect/augmented)",
-    )
+    parser.add_argument("--output-dir", help="Directory to save transformed images and annotations")
     args = parser.parse_args()
-    augment_data(coco_json_filename=args.coco_json_path, output_dir=args.output_dir)
+    transform_dataset(coco_json_filename=args.coco_json_path, output_dir=args.output_dir)
 
 
 if __name__ == "__main__":

@@ -899,6 +899,7 @@ dependencies = [
     { name = "ruff" },
     { name = "streamlit" },
     { name = "ultralytics" },
+    { name = "wonderwords" },
 ]
 
 [package.metadata]
@@ -909,6 +910,7 @@ requires-dist = [
     { name = "ruff", specifier = ">=0.9.6" },
     { name = "streamlit", specifier = ">=1.42.0" },
     { name = "ultralytics", specifier = ">=8.3.223" },
+    { name = "wonderwords", specifier = ">=3.0.1" },
 ]
 
 [[package]]
@@ -3758,6 +3760,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/24/30/6b0809f4510673dc723187aeaf24c7f5459922d01e2f794277a3dfb90345/wcwidth-0.2.14.tar.gz", hash = "sha256:4d478375d31bc5395a3c55c40ccdf3354688364cd61c4f6adacaa9215d0b3605", size = 102293, upload-time = "2025-09-22T16:29:53.023Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/af/b5/123f13c975e9f27ab9c0770f514345bd406d0e8d3b7a0723af9d43f710af/wcwidth-0.2.14-py2.py3-none-any.whl", hash = "sha256:a7bb560c8aee30f9957e5f9895805edd20602f2d7f720186dfd906e82b4982e1", size = 37286, upload-time = "2025-09-22T16:29:51.641Z" },
+]
+
+[[package]]
+name = "wonderwords"
+version = "3.0.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ff/23/e144fc3dfabb845dc1d94c45315d97b308cf75a664e3db3a89aeb1cb505d/wonderwords-3.0.1.tar.gz", hash = "sha256:5ee43ab6f13823a857a7c3d58c7b4db6a1350bd3aa5f914ed379ad49042a1c36", size = 73339, upload-time = "2025-10-30T17:30:44.231Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a4/75/855c2062d28b8e9247939f8262fb2f4ff3b12a49e4bab9fd1ba16cc5df82/wonderwords-3.0.1-py3-none-any.whl", hash = "sha256:4dd66deb6a76ca9e0b0422d1d3e111f9b910d7c16922d42de733ee8def98f8d0", size = 51658, upload-time = "2025-10-30T17:30:42.785Z" },
 ]
 
 [[package]]
