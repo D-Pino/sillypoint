@@ -10,33 +10,28 @@ def split_coco(coco_json_path: str, train_ratio: float, val_ratio: float, seed: 
     with coco_path.open("r") as f:
         coco = json.load(f)
 
-    dataset_root = coco_path.parent
-    images_root = dataset_root / "images"
-    annotations_root = dataset_root / "annotations"
+    images_root = coco_path.parent / "images"
     images_root.mkdir(parents=True, exist_ok=True)
+    annotations_root = coco_path.parent / "annotations"
     annotations_root.mkdir(parents=True, exist_ok=True)
 
-    images = coco["images"]
-    annotations = coco["annotations"]
-    categories = coco["categories"]
-
-    ids = [im["id"] for im in images]
+    all_im_ids = [im["id"] for im in coco["images"]]
     random.seed(seed)
-    random.shuffle(ids)
+    random.shuffle(all_im_ids)
 
-    n_total = len(ids)
+    n_total = len(all_im_ids)
     n_train = int(n_total * train_ratio)
     n_val = int(n_total * val_ratio)
 
-    train_ids = set(ids[:n_train])
-    val_ids = set(ids[n_train : n_train + n_val])
-    test_ids = set(ids[n_train + n_val :])
+    train_ids = set(all_im_ids[:n_train])
+    val_ids = set(all_im_ids[n_train : n_train + n_val])
+    test_ids = set(all_im_ids[n_train + n_val :])
 
-    images_by_id = {im["id"]: im for im in images}
+    images_by_id = {im["id"]: im for im in coco["images"]}
 
     splits = (("train", train_ids), ("val", val_ids), ("test", test_ids))
-    for name, id_set in splits:
-        split_image_dir = images_root / name
+    for split_name, id_set in splits:
+        split_image_dir = images_root / split_name
         split_image_dir.mkdir(parents=True, exist_ok=True)
 
         split_images = []
@@ -46,21 +41,19 @@ def split_coco(coco_json_path: str, train_ratio: float, val_ratio: float, seed: 
             img_entry["file_name"] = file_path.name
             split_images.append(img_entry)
 
-            src = file_path if file_path.is_absolute() else dataset_root / file_path
+            src = coco_path.parent / file_path
             dst = split_image_dir / img_entry["file_name"]
-            dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.move(src, dst)
 
-        split_annotations = [a for a in annotations if a["image_id"] in id_set]
-
-        out = {"images": split_images, "annotations": split_annotations, "categories": categories}
-        with (annotations_root / f"{name}.json").open("w") as f:
+        split_annotations = [a for a in coco["annotations"] if a["image_id"] in id_set]
+        out = {"images": split_images, "annotations": split_annotations, "categories": coco["categories"]}
+        with (annotations_root / f"{split_name}.json").open("w") as f:
             json.dump(out, f)
 
     print(f"Train images: {len(train_ids)}")
     print(f"Val images: {len(val_ids)}")
     print(f"Test images: {len(test_ids)}")
-    print(f"Saved splits under {dataset_root / 'images'} and {dataset_root / 'annotations'}")
+    print(f"Saved splits under {images_root} and {annotations_root}")
 
 
 def cli():
@@ -85,8 +78,8 @@ def cli():
     parser.add_argument(
         "--seed",
         type=int,
-        default=1337,
-        help="Random seed (default: 1337)",
+        default=2321,
+        help="Random seed (default: 2321)",
     )
     args = parser.parse_args()
 

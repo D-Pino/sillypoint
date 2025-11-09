@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 import fiftyone as fo
 import fiftyone.types as fot
@@ -6,12 +7,14 @@ from wonderwords import RandomWord
 
 
 def main(
-    images_dir: str,
     coco_json_path: str,
+    images_dir: str | None,
     dataset_name: str,
     address: str,
     port: int,
 ) -> None:
+    images_dir = images_dir or str(Path(coco_json_path).parent)
+
     random_word = RandomWord().word()
     dataset_name = f"{dataset_name} ({random_word})"
 
@@ -20,20 +23,9 @@ def main(
         data_path=images_dir,
         labels_path=coco_json_path,
         name=dataset_name,
-        label_field="ground_truth",
         include_id=True,
         include_annotation_id=True,
     )
-
-    # dataset.untag_samples()  # optional reset
-    # dataset.tag_samples("train")  # example project tag
-    # # label-level
-    # dataset.untag_labels("ground_truth")
-    # dataset.tag_labels("ground_truth", "gt")  # tag all boxes as "gt"
-
-    # # 3) Optional: save a reusable view recipe
-    # view = dataset.filter_labels("ground_truth", fo.ViewField("label").is_not_none())
-    # dataset.save_view("my-default", view)  # cheap, stores only the filter rules
 
     session = fo.launch_app(dataset, address=address, port=port)
     session.wait()
@@ -42,16 +34,16 @@ def main(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="View COCO annotations in FiftyOne")
     parser.add_argument(
-        "--images-dir",
-        type=str,
-        default="data/defect_detect/scales_cropped_out",
-        help="Directory containing images",
-    )
-    parser.add_argument(
         "--coco-json-path",
         type=str,
         default="data/defect_detect/scales_cropped_out/_annotations.coco.json",
         help="Path to COCO JSON annotations file",
+    )
+    parser.add_argument(
+        "--images-dir",
+        type=str,
+        default=None,
+        help="Directory containing images (defaults to directory of the COCO JSON)",
     )
     parser.add_argument(
         "--dataset-name",
