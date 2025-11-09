@@ -29,18 +29,40 @@ def _clip_rect(x: int, y: int, w: int, h: int, img_w: int, img_h: int) -> tuple[
 
 
 def _feather_mask(h: int, w: int) -> np.ndarray:
-    # Determine the feather width (how many pixels for the soft edge of the mask)
-    feather = max(2, min(8, min(h, w) // 10))
-    base = np.zeros(shape=(h, w), dtype=np.float32)
-    x0, y0 = feather, feather
-    x1, y1 = max(x0 + 1, w - feather - 1), max(y0 + 1, h - feather - 1)
-    cv2.rectangle(img=base, pt1=(x0, y0), pt2=(x1, y1), color=1.0, thickness=-1)
-    mask = cv2.GaussianBlur(src=base, ksize=(0, 0), sigmaX=float(feather), sigmaY=float(feather))
-    mask = np.clip(a=mask, a_min=0.0, a_max=1.0)
+    """Create a ring-feather alpha mask.
+
+    The interior (beyond `feather` pixels from the edge) is exactly 1.0,
+    and only the outer band smoothly rolls off to 0. This avoids washing
+    out the defect interior while still hiding seams at the boundary.
+    """
+    # Size-adaptive feather: ~5% of min dimension, clamped to [1, 8]
+    feather = int(max(1, min(8, round(min(h, w) * 0.05))))
+
+    # Distance transform requires 8-bit single channel with non-zero foreground
+    # and zeros where distance should go to 0 (the edges).
+    base = np.ones((h, w), dtype=np.uint8)
+    base[0, :] = 0
+    base[-1, :] = 0
+    base[:, 0] = 0
+    base[:, -1] = 0
+
+    # Distance to nearest zero pixel (i.e., distance to the edge)
+    dist = cv2.distanceTransform(base, distanceType=cv2.DIST_L2, maskSize=3)
+    mask = dist / float(max(1, feather))
+    # Clamp to [0, 1]; interior beyond `feather` becomes exactly 1
+    mask = np.clip(mask, 0.0, 1.0)
+    # Slight gamma to keep the band gentle without dimming the interior
+    mask = mask.astype(np.float32) ** 0.9
     return mask
 
 
-def _rotate_with_bounds(img: np.ndarray, angle_deg: float) -> np.ndarray:
+def _rotate_with_bounds(
+    img: np.ndarray,
+    angle_deg: float,
+    border_mode: int = cv2.BORDER_REFLECT,
+    border_value: tuple[int, int, int] | int = 0,
+    interp: int = cv2.INTER_LINEAR,
+) -> np.ndarray:
     if angle_deg % 360 == 0:
         return img
     (h, w) = img.shape[:2]
@@ -52,7 +74,14 @@ def _rotate_with_bounds(img: np.ndarray, angle_deg: float) -> np.ndarray:
     nH = int((h * cos) + (w * sin))
     M[0, 2] += (nW / 2.0) - cX
     M[1, 2] += (nH / 2.0) - cY
-    return cv2.warpAffine(src=img, M=M, dsize=(nW, nH), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    return cv2.warpAffine(
+        src=img,
+        M=M,
+        dsize=(nW, nH),
+        flags=interp,
+        borderMode=border_mode,
+        borderValue=border_value,
+    )
 
 
 def _alpha_blend(dst: np.ndarray, src: np.ndarray, mask: np.ndarray, x: int, y: int) -> None:
@@ -73,7 +102,7 @@ def _rand_name(existing: set[str]) -> str:
     for _ in range(10_000):
         adj = rw.word(include_categories=["adjective"])
         noun = rw.word(include_categories=["noun"])
-        name = f"{adj}_{noun}".lower()
+        name = f"{adj}_{noun}".replace(" ", "").lower()
         if name not in existing:
             return name
     # Fallback with counter if somehow exhausted
@@ -175,21 +204,23 @@ def build_manifest(
     seed: int,
     run_name: str,
     same_source_only: bool,
+    defects_per_image: int | None,
 ) -> dict[str, Any]:
     # Compute min/max defects per original image
     ann_counter = Counter(ann.get("image_id") for ann in coco_data.get("annotations", []))
     ann_counts = [ann_counter[img_id] for img_id in images_meta.keys()]
     # Use those to determine the range of defects per generated image
-    min_k = (min(ann_counts) if ann_counts else 0) + 3
-    max_k = (max(ann_counts) if ann_counts else 0) + 3
+    min_k = (min(ann_counts) if ann_counts else 0) + 5
+    max_k = (max(ann_counts) if ann_counts else 0) + 5
 
     bg_keys = list(backgrounds.keys())
     name_set = set()
     manifest_images: list[dict[str, Any]] = []
-    print(f"Generating manifest for {num_images} images with {min_k}-{max_k} defects each")
+    defects_desc = f"{defects_per_image}" if defects_per_image is not None else f"{min_k}-{max_k}"
+    print(f"Generating manifest for {num_images} images with {defects_desc} defects each")
     for _ in range(num_images):
-        # Choose a random number of defects for this image
-        k = rng.randint(a=min_k, b=max_k)
+        # Choose how many defects to place for this image
+        k = defects_per_image if defects_per_image is not None else rng.randint(a=min_k, b=max_k)
         # Choose a random background image
         bg_img_id = rng.choice(seq=bg_keys)
         bg_meta = images_meta[bg_img_id]
@@ -206,7 +237,14 @@ def build_manifest(
             # Choose a random rotation angle
             angle = rng.random() * 360.0
             # Rotate the patch to determine dimensions for placement
-            rot_patch = _rotate_with_bounds(img=patch_obj.patch, angle_deg=angle)
+            # Use sharper resampling for the patch to keep detail
+            rot_patch = _rotate_with_bounds(
+                img=patch_obj.patch,
+                angle_deg=angle,
+                border_mode=cv2.BORDER_REFLECT,
+                border_value=0,
+                interp=cv2.INTER_LANCZOS4,
+            )
             ph, pw = rot_patch.shape[:2]
             # Place the patch randomly on the background image
             x = rng.randint(a=0, b=bg_w - pw)
@@ -243,6 +281,7 @@ def build_manifest(
             "seed": seed,
             "run_name": run_name,
             "same_source_only": same_source_only,
+            "defects_per_image": defects_per_image,
         },
         "images": manifest_images,
     }
@@ -276,8 +315,20 @@ def execute_manifest(
             if patch is None:
                 continue
             angle = placement_info.get("rotation_deg", 0.0)
-            rot_patch = _rotate_with_bounds(img=patch.patch, angle_deg=angle)
-            rot_mask = _rotate_with_bounds(img=patch.mask, angle_deg=angle).astype(dtype=np.float32)
+            rot_patch = _rotate_with_bounds(
+                img=patch.patch,
+                angle_deg=angle,
+                border_mode=cv2.BORDER_REFLECT,
+                border_value=0,
+                interp=cv2.INTER_LANCZOS4,
+            )
+            rot_mask = _rotate_with_bounds(
+                img=patch.mask,
+                angle_deg=angle,
+                border_mode=cv2.BORDER_CONSTANT,
+                border_value=0,
+                interp=cv2.INTER_LINEAR,
+            ).astype(dtype=np.float32)
 
             x, y = placement_info.get("x"), placement_info.get("y")
             _alpha_blend(dst=bg, src=rot_patch, mask=rot_mask, x=x, y=y)
@@ -335,6 +386,7 @@ def generate_data(
     seed: int,
     plan_only: bool,
     same_source_only: bool,
+    defects_per_image: int | None,
 ) -> None:
     coco_path = Path(coco_json_path)
     if not coco_path.exists():
@@ -371,6 +423,7 @@ def generate_data(
         seed=seed,
         run_name=run_name,
         same_source_only=same_source_only,
+        defects_per_image=defects_per_image,
     )
     with manifest_path.open("w") as f:
         json.dump(manifest, f, indent=2)
@@ -413,6 +466,11 @@ def cli() -> None:
         action="store_true",
         help="If set, only place defects from the same source image as the chosen background",
     )
+    parser.add_argument(
+        "--defects-per-image",
+        type=int,
+        help="If set, force this number of defects per generated image (default: random per image)",
+    )
 
     args = parser.parse_args()
     generate_data(
@@ -422,6 +480,7 @@ def cli() -> None:
         seed=args.seed,
         plan_only=args.plan_only,
         same_source_only=args.same_source_only,
+        defects_per_image=args.defects_per_image,
     )
 
 
