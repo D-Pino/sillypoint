@@ -6,9 +6,9 @@ from ultralytics import SAM, YOLO
 
 PROJECT_ROOT = Path(__file__).parent.parent
 DEFAULT_TEST_IMAGES = PROJECT_ROOT / "data" / "defect_detect" / "augmented" / "incompetent_gig" / "images" / "test"
-DEFAULT_FINETUNED_WEIGHTS = PROJECT_ROOT / "finetune_yolo" / "runs" / "run_1" / "weights" / "best.pt"
+DEFAULT_FINETUNED_WEIGHTS = PROJECT_ROOT / "src" / "finetune_yolo" / "runs" / "run_1" / "weights" / "best.pt"
 DEFAULT_RUNS_DIR = PROJECT_ROOT / "runs"
-EVALS_ROOT = PROJECT_ROOT / "finetune_yolo" / "eval_runs"
+EVALS_ROOT = PROJECT_ROOT / "src" /"finetune_yolo" / "eval_runs"
 
 
 def run_yolo(
