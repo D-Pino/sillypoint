@@ -7,7 +7,7 @@ A personal playground repo for learning and experimenting with different technol
 <table>
   <tr>
     <td><h3><b>batpad</b> 📝</h3></td>
-    <td>A Django-based web application for maybe learning some web dev (barebones, not in progress)</td>
+    <td>Explore some web dev with Django and React</td>
   </tr>
   <tr>
     <td><h3><b>fineleg</b> 🦀</h3></td>
@@ -15,15 +15,15 @@ A personal playground repo for learning and experimenting with different technol
   </tr>
   <tr>
     <td><h3><b>firstslip</b> 🔬</h3></td>
-    <td>To play around with python and/or ML models</td>
+    <td>CV and ML</td>
   </tr>
   <tr>
     <td><h3><b>cowcorner</b> 🐄</h3></td>
-    <td>Small python project to use sqlalchemy and alembic to manage a database. Might also use this to practise some ETLs and data ingestion</td>
+    <td>Short experiment in data ingestion to practise some data modeling / pipeline work</td>
   </tr>
   <tr>
     <td><h3><b>thirdman</b> 🤖</h3></td>
-    <td>Robotics simulation exploration using Isaac Sim for learning robotics concepts and simulation</td>
+    <td>Trying to generate robotics sim environments with natural language</td>
   </tr>
 </table>
 

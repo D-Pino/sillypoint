@@ -3,4 +3,5 @@ checkpoints
 data/*
 *.pt
 src/finetune_yolo/runs/*
-src/finetune_yolo/evals/*
+src/finetune_yolo/eval_runs/*
+src/finetune_yolo/train_runs/*
