@@ -28,6 +28,8 @@ def finetune_yolo(data_dir: str) -> None:
         save=True,
         device=0,
         epochs=20,
+        batch=16,
+        imgsz=512,
     )
 
     print(f"Training complete. Results saved to {runs_dir / run_name}")
