@@ -10,7 +10,7 @@ image = "0.25.9"
 itertools = "0.14.0"
 las = "0.9.6"
 plotly = "0.12.1"
-polars = { version = "0.45.1", features = ["cross_join", "json", "lazy", "random", "round_series"] }
+polars = { version = "0.45.1", features = ["cross_join", "json", "lazy", "dtype-u8", "random", "round_series"] }
 reqwest = { version = "0.12.24", features = ["blocking", "json"] }
 rerun = "0.27.2"
 serde = "1.0.228"

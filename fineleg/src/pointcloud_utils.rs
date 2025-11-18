@@ -61,15 +61,27 @@ pub fn center_pointcloud(pointcloud: DataFrame) -> PolarsResult<DataFrame> {
 pub fn load_las_to_df(path: &str) -> Result<DataFrame> {
     let mut reader = las::Reader::from_path(path)?;
 
-    let (x, y, z) = reader.points().filter_map(Result::ok).fold(
-        (vec![], vec![], vec![]),
-        |(mut x, mut y, mut z), point| {
-            x.push(point.x);
-            y.push(point.y);
-            z.push(point.z);
-            (x, y, z)
+    let (x, y, z, r, g, b) = reader.points().filter_map(Result::ok).fold(
+        (vec![], vec![], vec![], vec![], vec![], vec![]),
+        |(mut x, mut y, mut z, mut r, mut g, mut b), point| {
+            // Store positions as f32 and colors as u8 for efficiency
+            x.push(point.x as f32);
+            y.push(point.y as f32);
+            z.push(point.z as f32);
+
+            if let Some(color) = point.color {
+                r.push(color.red as u8);
+                g.push(color.green as u8);
+                b.push(color.blue as u8);
+            } else {
+                r.push(0);
+                g.push(0);
+                b.push(0);
+            }
+
+            (x, y, z, r, g, b)
         },
     );
 
-    Ok((df!["x" => x, "y" => y, "z" => z])?)
+    Ok((df!["x" => x, "y" => y, "z" => z, "r" => r, "g" => g, "b" => b])?)
 }
