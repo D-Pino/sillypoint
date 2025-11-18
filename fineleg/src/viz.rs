@@ -12,19 +12,27 @@ pub fn render_pointcloud_in_rerun(
     pointcloud: DataFrame,
     point_radius: Option<f32>,
 ) -> Result<()> {
-    // TODO: handle null values
-    let x = pointcloud.column("x")?.cast(&DataType::Float32)?;
-    let y = pointcloud.column("y")?.cast(&DataType::Float32)?;
-    let z = pointcloud.column("z")?.cast(&DataType::Float32)?;
-    let points: Vec<(f32, f32, f32)> = x
-        .f32()?
+    let x = pointcloud.column("x")?.f32()?;
+    let y = pointcloud.column("y")?.f32()?;
+    let z = pointcloud.column("z")?.f32()?;
+    let positions = x
         .into_iter()
-        .zip(y.f32()?)
-        .zip(z.f32()?)
-        .map(|((x, y), z)| (x.unwrap(), y.unwrap(), z.unwrap()))
-        .collect();
+        .zip(y)
+        .zip(z)
+        .filter_map(|((x, y), z)| Some((x?, y?, z?)));
 
-    let rerun_pointcloud = rerun::Points3D::new(&points).with_radii([point_radius.unwrap_or(0.5)]);
+    let r = pointcloud.column("r")?.u8()?;
+    let g = pointcloud.column("g")?.u8()?;
+    let b = pointcloud.column("b")?.u8()?;
+    let colors = r
+        .into_iter()
+        .zip(g)
+        .zip(b)
+        .filter_map(|((r, g), b)| Some(rerun::Color::from_rgb(r?, g?, b?)));
+
+    let rerun_pointcloud = rerun::Points3D::new(positions)
+        .with_colors(colors)
+        .with_radii([point_radius.unwrap_or(0.2)]);
     rec.log(entity_path, &rerun_pointcloud)?;
     Ok(())
 }
