@@ -38,11 +38,17 @@ pub fn voxel_downsample(
             col("x").mean().alias("x_voxel_value"),
             col("y").mean().alias("y_voxel_value"),
             col("z").mean().alias("z_voxel_value"),
+            col("r").mean().alias("r_voxel_value"),
+            col("g").mean().alias("g_voxel_value"),
+            col("b").mean().alias("b_voxel_value"),
         ])
         .select([
             col("x_voxel_value").alias("x"),
             col("y_voxel_value").alias("y"),
             col("z_voxel_value").alias("z"),
+            col("r_voxel_value").cast(DataType::UInt8).alias("r"),
+            col("g_voxel_value").cast(DataType::UInt8).alias("g"),
+            col("b_voxel_value").cast(DataType::UInt8).alias("b"),
         ])
         .collect()
 }
@@ -58,13 +64,13 @@ pub fn center_pointcloud(pointcloud: DataFrame) -> PolarsResult<DataFrame> {
         .collect()
 }
 
-pub fn load_las_to_df(path: &str) -> Result<DataFrame> {
+pub fn load_las_to_df(path: &str, max_points: Option<usize>) -> Result<DataFrame> {
     let mut reader = las::Reader::from_path(path)?;
+    let points = reader.points().take(max_points.unwrap_or(usize::MAX));
 
-    let (x, y, z, r, g, b) = reader.points().filter_map(Result::ok).fold(
+    let (x, y, z, r, g, b) = points.filter_map(Result::ok).fold(
         (vec![], vec![], vec![], vec![], vec![], vec![]),
         |(mut x, mut y, mut z, mut r, mut g, mut b), point| {
-            // Store positions as f32 and colors as u8 for efficiency
             x.push(point.x as f32);
             y.push(point.y as f32);
             z.push(point.z as f32);

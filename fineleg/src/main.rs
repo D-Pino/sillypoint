@@ -6,22 +6,39 @@ fn main() -> Result<()> {
     // Initialize rerun
     let rec = rerun::RecordingStreamBuilder::new("switzerland").spawn()?;
 
+    // Load pointcloud
     println!("Loading pointcloud...");
     let pointcloud = pointcloud_utils::load_las_to_df(
         "/home/pino/github/sillypoint/fineleg/data/pointcloud/urban08/urban08/sick_pointcloud.las",
+        Some(3_000_000),
     )?;
     println!("Full pointcloud: {:?}", pointcloud);
 
-    println!("Sending pointcloud to rerun...");
-    for _ in 0..10 {
-        let pointcloud_downsampled = pointcloud.sample_n_literal(50_000, false, false, None)?;
-        viz::render_pointcloud_in_rerun(rec.clone(), "points", pointcloud_downsampled, None)?;
+    let num_points = pointcloud.height();
+    // Show progressive downsampling at 10 levels
+    let num_stages = 10;
+    for stage in 0..num_stages {
+        let target_points = if stage == 0 {
+            num_points // First stage: full pointcloud
+        } else {
+            // Linear interpolation of voxels_per_axis (cube root), then cube it back
+            let max_voxels_per_axis = (num_points as f64).cbrt();
+            let min_voxels_per_axis = (num_points as f64 * 0.1).cbrt();
+            let voxels_per_axis = max_voxels_per_axis - 
+                ((max_voxels_per_axis - min_voxels_per_axis) * stage as f64 / (num_stages - 1) as f64);
+            (voxels_per_axis.powi(3).round()) as usize
+        };
+
+        println!("Stage {}: targeting {} points", stage, target_points);
+        let new_pointcloud = if stage == 0 {
+            pointcloud.clone()
+        } else {
+            pointcloud_utils::voxel_downsample(pointcloud.clone(), target_points)?
+        };
+        println!("Stage {} actual points: {}", stage, new_pointcloud.height());
+
+        viz::send_pointcloud_to_rerun(rec.clone(), "points", new_pointcloud, None)?;
     }
-
-    // let centered = center_pointcloud(pointcloud_downsampled)?;
-    // render_pointcloud_in_plotly(pointcloud_downsampled.clone())?;
-
-    // render_pointcloud_in_rerun(rec, "points", pointcloud_downsampled_2, None)?;
 
     Ok(())
 }
