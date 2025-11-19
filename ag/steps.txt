@@ -1,6 +1,0 @@
-pip install autogluon --extra-index-url https://download.pytorch.org/whl/cpu
-
-mim install "mmcv==2.1.0"
-
-pip install "mmdet==3.2.0"
-
