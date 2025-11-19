@@ -9,6 +9,7 @@ pub fn voxel_downsample(
     // NB: This is a little naive, the caller specifies the number of voxels in the grid, but
     // can't (yet) specify how many voxels with actual points in them will be returned
     // TODO: upgrade this so that user can specify number of points in final pointcloud (not trivial)
+    // TODO: Some outlier removal might be nice here
     let num_voxels_per_axis = (num_voxels_in_grid as f64).cbrt().round();
 
     // TODO: Beware division by zero in here
