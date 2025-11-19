@@ -6,7 +6,7 @@ use plotly::{Layout, Plot, Scatter3D};
 use polars::prelude::*;
 use rerun::RecordingStream;
 
-pub fn render_pointcloud_in_rerun(
+pub fn send_pointcloud_to_rerun(
     rec: RecordingStream,
     entity_path: &str,
     pointcloud: DataFrame,
@@ -43,7 +43,7 @@ pub fn render_las_in_rerun(
     path: &str,
     point_radius: Option<f32>,
 ) -> Result<()> {
-    render_pointcloud_in_rerun(rec, entity_path, load_las_to_df(path)?, point_radius)?;
+    send_pointcloud_to_rerun(rec, entity_path, load_las_to_df(path, None)?, point_radius)?;
     Ok(())
 }
 
