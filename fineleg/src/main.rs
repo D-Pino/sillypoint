@@ -10,7 +10,8 @@ fn main() -> Result<()> {
     println!("Loading pointcloud...");
     let pointcloud = pointcloud_utils::load_las_to_df(
         "/home/pino/github/sillypoint/fineleg/data/pointcloud/urban08/urban08/sick_pointcloud.las",
-        Some(3_000_000),
+        // Some(1_000_000),
+        None,
     )?;
     println!("Full pointcloud: {:?}", pointcloud);
 
@@ -24,8 +25,9 @@ fn main() -> Result<()> {
             // Linear interpolation of voxels_per_axis (cube root), then cube it back
             let max_voxels_per_axis = (num_points as f64).cbrt();
             let min_voxels_per_axis = (num_points as f64 * 0.1).cbrt();
-            let voxels_per_axis = max_voxels_per_axis - 
-                ((max_voxels_per_axis - min_voxels_per_axis) * stage as f64 / (num_stages - 1) as f64);
+            let voxels_per_axis = max_voxels_per_axis
+                - ((max_voxels_per_axis - min_voxels_per_axis) * stage as f64
+                    / (num_stages - 1) as f64);
             (voxels_per_axis.powi(3).round()) as usize
         };
 
@@ -33,11 +35,11 @@ fn main() -> Result<()> {
         let new_pointcloud = if stage == 0 {
             pointcloud.clone()
         } else {
-            pointcloud_utils::voxel_downsample(pointcloud.clone(), target_points)?
+            pointcloud_utils::voxel_downsample(&pointcloud, target_points)?
         };
         println!("Stage {} actual points: {}", stage, new_pointcloud.height());
 
-        viz::send_pointcloud_to_rerun(rec.clone(), "points", new_pointcloud, None)?;
+        viz::send_pointcloud_to_rerun(rec.clone(), "points", &new_pointcloud, None)?;
     }
 
     Ok(())

@@ -3,23 +3,34 @@ use polars::df;
 use polars::prelude::*;
 
 pub fn voxel_downsample(
-    pointcloud: DataFrame,
+    pointcloud: &DataFrame,
     num_voxels_in_grid: usize,
 ) -> PolarsResult<DataFrame> {
-    // NB: This is a little naive, the caller specifies the number of voxels in the grid, but
-    // can't (yet) specify how many voxels with actual points in them will be returned
-    // TODO: upgrade this so that user can specify number of points in final pointcloud (not trivial)
-    // TODO: Some outlier removal might be nice here
     let num_voxels_per_axis = (num_voxels_in_grid as f64).cbrt().round();
 
+    // We take a reference for API ergonomics, but we must clone locally because lazy() consumes the DataFrame.
+    // The clone is cheap (reference counted), and this prevents the caller from having to clone.
     // TODO: Beware division by zero in here
     pointcloud
+        .clone()
         .lazy()
+        // Remove outliers so the voxel grid isn't skewed by a few points
+        .filter(
+            col("x")
+                .gt(col("x").quantile(lit(0.05), QuantileMethod::Nearest))
+                .and(col("x").lt(col("x").quantile(lit(0.95), QuantileMethod::Nearest)))
+                .and(col("y").gt(col("y").quantile(lit(0.05), QuantileMethod::Nearest)))
+                .and(col("y").lt(col("y").quantile(lit(0.95), QuantileMethod::Nearest)))
+                .and(col("z").gt(col("z").quantile(lit(0.05), QuantileMethod::Nearest)))
+                .and(col("z").lt(col("z").quantile(lit(0.95), QuantileMethod::Nearest))),
+        )
+        // Calculate size of voxels along each axis, essentially creating the voxel grid
         .with_columns([
             ((col("x").max() - col("x").min()) / lit(num_voxels_per_axis)).alias("voxel_size_x"),
             ((col("y").max() - col("y").min()) / lit(num_voxels_per_axis)).alias("voxel_size_y"),
             ((col("z").max() - col("z").min()) / lit(num_voxels_per_axis)).alias("voxel_size_z"),
         ])
+        // Calculate the index of the voxel that each point should belong to
         .with_columns([
             ((col("x") - col("x").min()) / col("voxel_size_x"))
                 .floor()
@@ -34,7 +45,9 @@ pub fn voxel_downsample(
                 .cast(DataType::Int64)
                 .alias("voxel_idx_z"),
         ])
+        // Group points by voxel
         .group_by(["voxel_idx_x", "voxel_idx_y", "voxel_idx_z"])
+        // Calculate the voxel values by taking the mean of the points in the voxel
         .agg([
             col("x").mean().alias("x_voxel_value"),
             col("y").mean().alias("y_voxel_value"),
@@ -43,6 +56,7 @@ pub fn voxel_downsample(
             col("g").mean().alias("g_voxel_value"),
             col("b").mean().alias("b_voxel_value"),
         ])
+        // Select/rename columns we care about, cast rgb back to u8
         .select([
             col("x_voxel_value").alias("x"),
             col("y_voxel_value").alias("y"),

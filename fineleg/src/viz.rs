@@ -9,7 +9,7 @@ use rerun::RecordingStream;
 pub fn send_pointcloud_to_rerun(
     rec: RecordingStream,
     entity_path: &str,
-    pointcloud: DataFrame,
+    pointcloud: &DataFrame,
     point_radius: Option<f32>,
 ) -> Result<()> {
     let x = pointcloud.column("x")?.f32()?;
@@ -43,7 +43,7 @@ pub fn render_las_in_rerun(
     path: &str,
     point_radius: Option<f32>,
 ) -> Result<()> {
-    send_pointcloud_to_rerun(rec, entity_path, load_las_to_df(path, None)?, point_radius)?;
+    send_pointcloud_to_rerun(rec, entity_path, &load_las_to_df(path, None)?, point_radius)?;
     Ok(())
 }
 
