@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 from lxml import etree
 import mujoco
+import mujoco.viewer
 from pydantic import BaseModel, field_validator
 from pydantic_ai import Agent, RunContext, UsageLimits
 from pydantic_ai.models.google import GoogleModel
@@ -18,12 +19,12 @@ API_KEY = os.getenv("GOOGLE_API_KEY")
 SYSTEM_PROMPT = (
     "You output ONLY valid MuJoCo XML (<mujoco>...</mujoco>) with no prose.\n"
     "Goal: given a scene description, produce a minimal but complete scene that represents the description and parses in MuJoCo.\n"
-    "Rules:\n"
-    '1) Prefer <include file="..."/> using known assets; do not invent paths.\n'
-    "2) Always call tool search_assets to find candidates before choosing assets.\n"
-    "3) For every chosen name, call resolve_asset and then include_asset_snippet; do not inline large XML.\n"
-    "4) If no asset fits, still return a valid empty scene with floor/light/camera.\n"
-    "5) No Markdown, no comments, no backticks. Return ONLY the XML string.\n"
+    # "Rules:\n"
+    # '1) Prefer <include file="..."/> using known assets; do not invent paths.\n'
+    # "2) Always call tool search_assets to find candidates before choosing assets.\n"
+    # "3) For every chosen name, call resolve_asset and then include_asset_snippet; do not inline large XML.\n"
+    # "4) If no asset fits, still return a valid empty scene with floor/light/camera.\n"
+    # "5) No Markdown, no comments, no backticks. Return ONLY the XML string.\n"
 )
 
 ## TODO: Do some more in depth harvesting of assets from these xmls
@@ -103,46 +104,49 @@ class MujocoSceneDefinition(BaseModel):
 
 provider = GoogleProvider(api_key=API_KEY)
 model = GoogleModel(model_name="gemini-2.0-flash", provider=provider)
+# sim_gen_agent = Agent(
+#     model=model, output_type=MujocoSceneDefinition, system_prompt=SYSTEM_PROMPT, deps_type=SimGenAgentDeps
+# )
 sim_gen_agent = Agent(
-    model=model, output_type=MujocoSceneDefinition, system_prompt=SYSTEM_PROMPT, deps_type=SimGenAgentDeps
+    model=model, output_type=MujocoSceneDefinition, system_prompt=SYSTEM_PROMPT, 
 )
 
 
-@sim_gen_agent.tool
-def list_assets(ctx: RunContext[SimGenAgentDeps]) -> list[str]:
-    """Return all available asset/robot/model names."""
-    return sorted(ctx.deps.catalog.keys())
+# @sim_gen_agent.tool
+# def list_assets(ctx: RunContext[SimGenAgentDeps]) -> list[str]:
+#     """Return all available asset/robot/model names."""
+#     return sorted(ctx.deps.catalog.keys())
 
 
-def _norm(s: str) -> str:
-    return "".join(ch for ch in s.lower() if ch.isalnum())
+# def _norm(s: str) -> str:
+#     return "".join(ch for ch in s.lower() if ch.isalnum())
 
 
-@sim_gen_agent.tool
-def search_assets(ctx: RunContext[SimGenAgentDeps], query: str) -> list[str]:
-    """
-    Return asset/robot/model names that match the query.
-    Ranking: prefix matches first, then substring matches.
-    """
-    names = sorted(ctx.deps.catalog.keys())
-    q = _norm(query)
-    pref = [n for n in names if _norm(n).startswith(q)]
-    sub = [n for n in names if q in _norm(n) and n not in pref]
-    return pref + sub
+# @sim_gen_agent.tool
+# def search_assets(ctx: RunContext[SimGenAgentDeps], query: str) -> list[str]:
+#     """
+#     Return asset/robot/model names that match the query.
+#     Ranking: prefix matches first, then substring matches.
+#     """
+#     names = sorted(ctx.deps.catalog.keys())
+#     q = _norm(query)
+#     pref = [n for n in names if _norm(n).startswith(q)]
+#     sub = [n for n in names if q in _norm(n) and n not in pref]
+#     return pref + sub
 
 
-@sim_gen_agent.tool
-def resolve_asset(ctx: RunContext[SimGenAgentDeps], name: str) -> str:
-    """Return XML path for an asset/robot/model name."""
-    if name not in ctx.deps.catalog:
-        raise ValueError(f"unknown asset/robot/model: {name!r}")
-    return ctx.deps.catalog[name]
+# @sim_gen_agent.tool
+# def resolve_asset(ctx: RunContext[SimGenAgentDeps], name: str) -> str:
+#     """Return XML path for an asset/robot/model name."""
+#     if name not in ctx.deps.catalog:
+#         raise ValueError(f"unknown asset/robot/model: {name!r}")
+#     return ctx.deps.catalog[name]
 
 
-@sim_gen_agent.tool
-def include_asset_snippet(ctx: RunContext[SimGenAgentDeps], name: str) -> str:
-    """Return <include> tag for an asset/robot/model."""
-    return f'<include file="{resolve_asset(ctx, name)}"/>'
+# @sim_gen_agent.tool
+# def include_asset_snippet(ctx: RunContext[SimGenAgentDeps], name: str) -> str:
+#     """Return <include> tag for an asset/robot/model."""
+#     return f'<include file="{resolve_asset(ctx, name)}"/>'
 
 
 async def generate_mujoco_xml(prompt: str) -> str:
@@ -163,7 +167,7 @@ async def cli():
         f.write(xml)
     model = mujoco.MjModel.from_xml_string(xml)
     data = mujoco.MjData(model)
-    mujoco.viewer.launch_passive(model, data)
+    mujoco.viewer.launch(model, data)
 
 
 if __name__ == "__main__":
