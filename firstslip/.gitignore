@@ -2,6 +2,6 @@ __pycache__
 checkpoints
 data/*
 *.pt
-src/finetune_yolo/runs/*
-src/finetune_yolo/eval_runs/*
-src/finetune_yolo/train_runs/*
+src/firstslip/finetune_yolo/runs/*
+src/firstslip/finetune_yolo/eval_runs/*
+src/firstslip/finetune_yolo/train_runs/*

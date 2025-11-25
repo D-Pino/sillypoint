@@ -1,13 +1,13 @@
 import argparse
 
 import pandas as pd
-from cowcorner.common import SessionLocal
 from sqlalchemy import select
 
+from cowcorner.common import SessionLocal
 from cowcorner.database.models import Delivery as DeliveryDB
 from cowcorner.database.models import Game as GameDB
 from cowcorner.database.models import Player as PlayerDB
-from utils import get_deliveries_to_ingest, validate_delivery_batch
+from cowcorner.ingest.utils import get_deliveries_to_ingest, validate_delivery_batch
 
 
 DEFAULT_NUM_DELIVERIES = 20_000

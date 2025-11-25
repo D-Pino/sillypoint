@@ -1,5 +1,6 @@
-from optimized import ingest
 import argparse
+
+from cowcorner.ingest.optimized import ingest
 
 DEFAULT_NUM_DELIVERIES = 20_000
 DEFAULT_BATCH_SIZE = 1000
