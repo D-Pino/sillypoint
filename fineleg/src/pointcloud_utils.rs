@@ -106,3 +106,39 @@ pub fn load_las_to_df(path: &str, max_points: Option<usize>) -> Result<DataFrame
 
     Ok((df!["x" => x, "y" => y, "z" => z, "r" => r, "g" => g, "b" => b])?)
 }
+
+#[derive(Debug, serde::Deserialize)]
+struct Vertex {
+    x: f32,
+    y: f32,
+    z: f32,
+    red: u8,
+    green: u8,
+    blue: u8,
+}
+
+pub fn load_ply_to_df(path: &str, max_points: Option<usize>) -> Result<DataFrame> {
+    let file = std::fs::File::open(path)?;
+    let reader = std::io::BufReader::new(file);
+
+    let mut ply_reader = serde_ply::PlyReader::from_reader(reader)?;
+    let vertices: Vec<Vertex> = ply_reader.next_element()?;
+
+    let (x, y, z, r, g, b) = vertices
+        .into_iter()
+        .take(max_points.unwrap_or(usize::MAX))
+        .fold(
+            (vec![], vec![], vec![], vec![], vec![], vec![]),
+            |(mut x, mut y, mut z, mut r, mut g, mut b), vertex| {
+                x.push(vertex.x);
+                y.push(vertex.y);
+                z.push(vertex.z);
+                r.push(vertex.red);
+                g.push(vertex.green);
+                b.push(vertex.blue);
+                (x, y, z, r, g, b)
+            },
+        );
+
+    Ok((df!["x" => x, "y" => y, "z" => z, "r" => r, "g" => g, "b" => b])?)
+}

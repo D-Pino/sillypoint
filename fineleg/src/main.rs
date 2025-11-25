@@ -3,18 +3,24 @@ use fineleg::{maptiles, pointcloud_utils, viz};
 use std::path::Path;
 
 fn main() -> Result<()> {
-    // Initialize rerun
-    let rec = rerun::RecordingStreamBuilder::new("switzerland").spawn()?;
-
     // Load pointcloud
     println!("Loading pointcloud...");
-    let pointcloud = pointcloud_utils::load_las_to_df(
-        "/home/pino/github/sillypoint/fineleg/data/pointcloud/urban08/urban08/sick_pointcloud.las",
-        // Some(1_000_000),
+    // let pointcloud = pointcloud_utils::load_las_to_df(
+    //     "/home/pino/github/sillypoint/fineleg/data/pointcloud/urban08/urban08/sick_pointcloud.las",
+    //     // Some(1_000_000),
+    //     None,
+    // )?;
+    let pointcloud = pointcloud_utils::load_ply_to_df(
+        "/home/pino/github/sillypoint/fineleg/data/bulbasaur.ply",
         None,
-    )?;
+    )
+    .unwrap();
     println!("Full pointcloud: {:?}", pointcloud);
 
+    // Initialize rerun
+    let rec = rerun::RecordingStreamBuilder::new("fineleg")
+        .spawn()
+        .unwrap();
     let num_points = pointcloud.height();
     // Show progressive downsampling at 10 levels
     let num_stages = 10;
@@ -39,7 +45,7 @@ fn main() -> Result<()> {
         };
         println!("Stage {} actual points: {}", stage, new_pointcloud.height());
 
-        viz::send_pointcloud_to_rerun(rec.clone(), "points", &new_pointcloud, None)?;
+        viz::send_pointcloud_to_rerun(rec.clone(), "points", &new_pointcloud, Some(0.002))?;
     }
 
     Ok(())
