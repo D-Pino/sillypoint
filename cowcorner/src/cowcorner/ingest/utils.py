@@ -16,7 +16,7 @@ def validate_delivery_batch(delivery_batch: pd.DataFrame) -> list[DeliveryVal]:
     delivery_list_model = TypeAdapter(type=list[DeliveryVal])
     deliveries = delivery_batch.to_dict(orient="records")
     try:
-        return delivery_list_model.validate_python(data=deliveries)
+        return delivery_list_model.validate_python(deliveries)
     except ValidationError as e:
         print(f"Batch validation failed: {e}\nWill validate deliveries one-by-one")
         return validate_deliveries(deliveries=deliveries)

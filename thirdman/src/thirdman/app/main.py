@@ -5,8 +5,8 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from sim import Sim, SimConfig
-from gen import generate_mujoco_xml
+from thirdman.sim import Sim, SimConfig
+from thirdman.gen import generate_mujoco_xml
 
 app = FastAPI()
 

@@ -16,8 +16,6 @@ DEFAULT_NUM_DELIVERIES = 20_000
 DEFAULT_BATCH_SIZE = 1000
 
 
-
-
 def prepare_delivery_data(
     delivery_batch: pd.DataFrame,
     valid_delivery_map: dict[str, DeliveryVal],
@@ -25,19 +23,19 @@ def prepare_delivery_data(
     game_lookup: dict[str, int],
 ) -> list[dict]:
     now = datetime.now(tz=timezone.utc)
-    
+
     delivery_records = []
     for row in delivery_batch.itertuples(index=False):
         source_id = row.id
         if source_id not in valid_delivery_map:
             continue
-            
+
         valid_delivery = valid_delivery_map[source_id]
-        
+
         delivery_record = {
             "id": uuid7(),
             "bowler_id": player_lookup[row.bowler],
-            "batsman_id": player_lookup[row.batsman], 
+            "batsman_id": player_lookup[row.batsman],
             "game_id": game_lookup[int(row.fixtureId)],
             "source_id": valid_delivery.source_id,
             "ball": valid_delivery.ball,
@@ -51,7 +49,7 @@ def prepare_delivery_data(
             "_updated_at": now,
         }
         delivery_records.append(delivery_record)
-    
+
     return delivery_records
 
 
@@ -66,12 +64,14 @@ def ingest_delivery_batch(delivery_batch: pd.DataFrame) -> int:
     valid_delivery_map = {d.source_id: d for d in valid_deliveries}
     delivery_batch = delivery_batch[delivery_batch["id"].isin(valid_delivery_map.keys())]
 
-    with SessionLocal() as session:
+    with SessionLocal.begin() as session:
         # Check for existing entities first to avoid redundant data preparation
-        player_names = pd.unique(values=pd.concat(objs=[delivery_batch["bowler"], delivery_batch["batsman"]])).astype(str).tolist()
+        player_names = (
+            pd.unique(values=pd.concat(objs=[delivery_batch["bowler"], delivery_batch["batsman"]])).astype(str).tolist()
+        )
         stmt = select(PlayerDB.id, PlayerDB.name).where(PlayerDB.name.in_(player_names))
         existing_players = {name: id for id, name in session.execute(statement=stmt)}
-        
+
         game_source_ids = delivery_batch["fixtureId"].unique().astype(int).tolist()
         stmt = select(GameDB.id, GameDB.source_id).where(GameDB.source_id.in_(game_source_ids))
         existing_games = {source_id: id for id, source_id in session.execute(statement=stmt)}
@@ -79,16 +79,22 @@ def ingest_delivery_batch(delivery_batch: pd.DataFrame) -> int:
         # Only prepare data for new entities
         new_player_names = set(player_names) - set(existing_players.keys())
         new_game_ids = set(game_source_ids) - set(existing_games.keys())
-        
+
         players_data = []
         if new_player_names:
             now = datetime.now(tz=timezone.utc)
-            players_data = [{"id": uuid7(), "name": str(name), "_created_at": now, "_updated_at": now} for name in new_player_names]
+            players_data = [
+                {"id": uuid7(), "name": str(name), "_created_at": now, "_updated_at": now} for name in new_player_names
+            ]
 
         games_data = []
         if new_game_ids:
-            game_data = delivery_batch[delivery_batch["fixtureId"].isin(new_game_ids)].drop_duplicates("fixtureId")[["fixtureId", "matchDate", "competition", "format"]]
-            game_data["processed_date"] = game_data["matchDate"].apply(func=lambda x: x.date() if not pd.isna(obj=x) else None)
+            game_data = delivery_batch[delivery_batch["fixtureId"].isin(new_game_ids)].drop_duplicates("fixtureId")[
+                ["fixtureId", "matchDate", "competition", "format"]
+            ]
+            game_data["processed_date"] = game_data["matchDate"].apply(
+                func=lambda x: x.date() if not pd.isna(obj=x) else None
+            )
             now = datetime.now(tz=timezone.utc)
             games_data = [
                 {
@@ -112,7 +118,7 @@ def ingest_delivery_batch(delivery_batch: pd.DataFrame) -> int:
             """
             print(f"Adding {len(players_data)} new players")
             session.execute(statement=text(player_sql), params=players_data)
-            
+
             # Update lookup with new players using the IDs we already generated
             new_players = {p["name"]: p["id"] for p in players_data}
             existing_players.update(new_players)
@@ -125,7 +131,7 @@ def ingest_delivery_batch(delivery_batch: pd.DataFrame) -> int:
             """
             print(f"Adding {len(games_data)} new games")
             session.execute(statement=text(game_sql), params=games_data)
-            
+
             # Update lookup with new games using the IDs we already generated
             new_games = {g["source_id"]: g["id"] for g in games_data}
             existing_games.update(new_games)
@@ -135,7 +141,7 @@ def ingest_delivery_batch(delivery_batch: pd.DataFrame) -> int:
             delivery_batch=delivery_batch,
             valid_delivery_map=valid_delivery_map,
             player_lookup=existing_players,
-            game_lookup=existing_games
+            game_lookup=existing_games,
         )
 
         if delivery_records:
@@ -153,7 +159,7 @@ def ingest_delivery_batch(delivery_batch: pd.DataFrame) -> int:
             print(f"Adding {len(delivery_records)} deliveries")
             session.execute(statement=text(delivery_sql), params=delivery_records)
 
-    ingested_count = len(delivery_records) if 'delivery_records' in locals() else 0
+    ingested_count = len(delivery_records) if "delivery_records" in locals() else 0
     print(f"Ingested {ingested_count} deliveries using optimized approach")
     return ingested_count
 

@@ -1,2 +1,4 @@
 isaacsim-webrtc-streaming-client*.AppImage
 scene.xml
+assets/*
+candidate_scenes/*
