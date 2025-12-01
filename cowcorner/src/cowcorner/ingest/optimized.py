@@ -28,7 +28,7 @@ def ingest_delivery_batch(delivery_batch: pd.DataFrame) -> int:
     delivery_batch = delivery_batch[delivery_batch["id"].isin(valid_delivery_map.keys())]
 
     # Add deliveries and related models to our database
-    with SessionLocal() as session:
+    with SessionLocal.begin() as session:
         # TODO: dismissedPlayer
         # TODO: teams
         # TODO: grounds

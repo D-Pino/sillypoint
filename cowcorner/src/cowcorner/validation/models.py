@@ -98,7 +98,7 @@ class Delivery(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def handle_nans(cls, data: Any) -> Any:
-        if isinstance(obj=data, classinfo=dict):
+        if isinstance(data, dict):
             for key, value in data.items():
                 if pd.isna(obj=value):
                     data[key] = None

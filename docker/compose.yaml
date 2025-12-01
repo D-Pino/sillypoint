@@ -49,7 +49,7 @@ services:
       # Im using the existing sillypoint db to let metabase set up its stuff
       MB_DB_TYPE: postgres
       MB_DB_DBNAME: ${SILLYPOINT_DB_NAME}
-      MB_DB_PORT: ${SILLYPOINT_DB_PORT}
+      MB_DB_PORT: 5432
       MB_DB_USER: ${SILLYPOINT_DB_USER} # TODO: maybe get metabase its own user/password
       MB_DB_PASS: ${SILLYPOINT_DB_PASSWORD}
       MB_DB_HOST: db_sillypoint

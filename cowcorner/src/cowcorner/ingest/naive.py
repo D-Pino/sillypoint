@@ -28,7 +28,7 @@ def ingest_delivery(delivery_data: dict[str, Any]) -> bool:
     if (validated_delivery := validate_delivery(delivery=delivery_data)) is None:
         return False
 
-    with SessionLocal() as session:
+    with SessionLocal.begin() as session:
         bowler, _ = get_or_create(model=PlayerDB, session=session, name=delivery_data["bowler"])
         batsman, _ = get_or_create(model=PlayerDB, session=session, name=delivery_data["batsman"])
 
