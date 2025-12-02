@@ -1,4 +1,7 @@
 isaacsim-webrtc-streaming-client*.AppImage
 scene.xml
-assets/*
+robots/*
+global_asset_store/*
 candidate_scenes/*
+generated_scenes/*
+asset_catalog.json

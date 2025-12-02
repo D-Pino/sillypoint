@@ -9,11 +9,11 @@ from pathlib import Path
 from PIL import Image
 from pydantic import BaseModel
 
-
+from thirdman.common import BASE_SCENE_PATH
 
 
 class SimConfig(BaseModel):
-    scene_xml: Path | str = Path(__file__).parent.parent / "scene_assets" / "base_scene.xml"
+    scene_xml: Path | str = BASE_SCENE_PATH
 
 
 class Sim:
