@@ -1,0 +1,15 @@
+<mujoco model="base_scene">
+  <option gravity="0 0 -9.81" timestep="0.002"/>
+
+  <asset>
+    <texture name="checker_tex" type="2d" builtin="checker"
+             width="512" height="512" rgb1="0.2 0.2 0.2" rgb2="0.8 0.8 0.8"/>
+    <material name="checker_mat" texture="checker_tex" texrepeat="5 5"/>
+  </asset>
+
+  <worldbody>
+    <geom name="floor" type="plane" pos="0 0 0" size="5 5 0.1"
+          material="checker_mat" condim="3" friction="1 0.5 0.01"/>
+    <light name="main_light" pos="0 0 3" dir="0 0 -1" diffuse="1 1 1"/>
+  </worldbody>
+</mujoco>
