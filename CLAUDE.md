@@ -1,0 +1,21 @@
+# Code Style & Conventions
+
+## General Principles
+
+- The most important thing to remember is to MAXIMIZE SIMPLICITY. Avoid unnecessary complexity, FAVOR SHORT AND SIMPLE SOLUTIONS.
+- When writing code, less is more. Avoid writing too many lines of code, avoid unnecessary comments or overly verbose syntax when there are simpler alternatives.
+
+## Python
+
+- Use type hints. Make sure to use the recent type hint syntax, ie prefer `list[dict[str, int]]` to `List[Dict[str, int]]`
+- When calling a function, pass arguments by name, ie prefer `speak(animal=dog)` (correct) rather than `speak(dog)` (wrong)
+  - I'm going to reiterate since this is a rule that AI code generators mess up often. WHEN CALLING A FUNCTION, PASS ARGUMENTS BY NAME. Prefer `save(im_path="cat.jpg")` over `save("cat.jpg")`
+
+## Frontend
+
+- For frontend work, I generally use React, with some limited amount of templated html due to ease of integration with django
+- Avoid complex state management when possible
+- In React, use Mantine. Not only should we use Mantine over other frameworks, we should use Mantine over doing custom complex design whenever possible
+- If a component seems reusable, then it is reasonable to extract it into its own "custom" component, albeit one that uses Mantine components
+- UI designs should be clean, simple and understandable. The code for them should also be clean, simple, understandable, and easy to maintain
+- The UI should generally look white as much as possible, black for contrast. When color is needed, use cool colors, like royal blue, cerulean, teal, royal purple. Avoid color gradients, prefer simple block colors, use light/dark versions of colors if you want to provide contrast
